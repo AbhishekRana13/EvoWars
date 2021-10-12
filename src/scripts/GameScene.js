@@ -168,7 +168,8 @@ export class GameScene
         {
             this.hasMobileInputPressed = false;
             this.analogInnerCircle.reset();
-         
+            
+            
         }
         
         
@@ -208,14 +209,16 @@ export class GameScene
         };
 
         console.log(this.mobileContainer);
-        
-        analogOuterCircle.on("pointerdown", (e) => {
+        this.analogPointerID = -1;
+        analogOuterCircle.on("touchstart", (e) => {
+            
+            this.analogPointerID = e.data.identifier;
             this.startPoint = e.data.global;
             this.hasMobileInputPressed = true;
         }, this);
 
-        analogOuterCircle.on("pointermove", (e) => {
-            if(this.hasMobileInputPressed)
+        analogOuterCircle.on("touchmove", (e) => {
+            if(this.hasMobileInputPressed && this.analogPointerID == e.data.identifier)
             {
                 const point = new PIXI.Point(e.data.global.x - this.mobileContainer.x, e.data.global.y - this.mobileContainer.y);
                 
@@ -235,10 +238,10 @@ export class GameScene
             }
         }, this);
 
-        analogOuterCircle.on("pointerup", (e) => {
+        analogOuterCircle.on("touchend", (e) => {
             this.hasMobileInputPressed = false;
             this.analogInnerCircle.reset();
-            
+            this.analogPointerID = -1;
         }, this);
 
 
@@ -255,15 +258,23 @@ export class GameScene
         boostBtn.interactive = true;
         const text = new DebugText("---", 0, 0, "#000", 48);
         this.mobileContainer.addChild(text);
+
+        this.boostBtnID = -1;
         boostBtn.on("touchstart",(e) => {
-            this.currentSpeed = gameSettings.boostedSpeed;
-            console.log(e)
-            text.text = e.data.identifier;
+                this.boostBtnID = e.data.identifier;
+                this.currentSpeed = gameSettings.boostedSpeed;
+                console.log(e)
+                text.text = e.data.identifier;
         }, this);
 
         boostBtn.on("touchend",(e) => {
-            this.currentSpeed = gameSettings.speed;
-            text.text = "---";
+            if(this.boostBtnID  == e.data.identifier)
+            {
+                this.currentSpeed = gameSettings.speed;
+                text.text = "---";
+                this.boostBtnID = -1;
+            }
+            
         }, this);
 
         this.mobileContainer.addChild(boostBtn);
@@ -278,6 +289,7 @@ export class GameScene
         swingBtn.y += radius * 0.5;
         swingBtn.interactive = true;
 
+       
         swingBtn.on("touchstart",(e) => {
             console.log(e);
             this.heroContainer.swingSword();
