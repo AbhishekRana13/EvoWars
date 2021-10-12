@@ -86,7 +86,7 @@ export class GameScene
        
 
         
-        this.updateWithAnalog();
+        this.updateWithAnalog(dt);
         
 
         this.entities.forEach(entity => {
@@ -129,13 +129,14 @@ export class GameScene
 
         if(getMagnitude(this.mobileDir) != 0)
         {
-            console.log(this.mobileDir);
             
+
             this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, this.mobileDir);
 
 
             this.backgroundContainer.x -= this.mobileDir.x *this.currentSpeed*dt;
-            this.backgroundContainer.y -= this.mobileDir.y *this.currentSpeed* dt;
+            this.backgroundContainer.y -= this.mobileDir.y *this.currentSpeed*dt;
+           
         }
 
 
@@ -172,12 +173,12 @@ export class GameScene
 
         const analogOuterCircle = new PIXI.Graphics();
         analogOuterCircle.beginFill(0xcccccc);
-        analogOuterCircle.drawCircle(0, 0, appConfig.width * 0.06);
+        analogOuterCircle.drawCircle(0, 0, appConfig.height * 0.07);
         analogOuterCircle.endFill();
 
         this.analogInnerCircle = new PIXI.Graphics();
         this.analogInnerCircle.beginFill(0x5c5c5c);
-        this.analogInnerCircle.drawCircle(0, 0, appConfig.width * 0.01);
+        this.analogInnerCircle.drawCircle(0, 0, appConfig.height * 0.01);
         this.analogInnerCircle.endFill();
 
         analogOuterCircle.interactive = true;
@@ -185,6 +186,7 @@ export class GameScene
         this.analogInnerCircle.reset = () => {
             this.analogInnerCircle.x = 0;
             this.analogInnerCircle.y = 0;
+            this.mobileDir = new PIXI.Point(0, 0);
         };
         
         analogOuterCircle.on("pointerdown", (e) => {
@@ -198,15 +200,15 @@ export class GameScene
                 const point = new PIXI.Point(e.data.global.x - this.mobileContainer.x, e.data.global.y - this.mobileContainer.y);
                 const direction = getDirectionBetween(analogOuterCircle.position, point);
                 this.mobileDir = normalize(direction);
-                if(getMagnitude(direction) < appConfig.width * 0.05)
+                if(getMagnitude(direction) < appConfig.height * 0.06)
                 {
                     this.analogInnerCircle.x = point.x;
                     this.analogInnerCircle.y = point.y;
                 } else
                 {
                     
-                    this.analogInnerCircle.x = this.mobileDir.x * appConfig.width * 0.05;
-                    this.analogInnerCircle.y = this.mobileDir.y * appConfig.width * 0.05;
+                    this.analogInnerCircle.x = this.mobileDir.x * appConfig.height * 0.06;
+                    this.analogInnerCircle.y = this.mobileDir.y * appConfig.height * 0.06;
                 }
               
             }
@@ -215,6 +217,7 @@ export class GameScene
         analogOuterCircle.on("pointerup", (e) => {
             this.hasMobileInputPressed = false;
             this.analogInnerCircle.reset();
+            
         }, this);
 
 
