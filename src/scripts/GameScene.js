@@ -253,17 +253,17 @@ export class GameScene
         boostBtn.y -= radius;
 
         boostBtn.interactive = true;
-        const text = new DebugText("no Pressed", 0, 0, "#000", 48);
+        const text = new DebugText("---", 0, 0, "#000", 48);
         this.mobileContainer.addChild(text);
         boostBtn.on("touchstart",(e) => {
             this.currentSpeed = gameSettings.boostedSpeed;
             console.log(e)
-            text.text = e.pointerId;
+            text.text = e.data.identifier;
         }, this);
 
         boostBtn.on("touchend",(e) => {
             this.currentSpeed = gameSettings.speed;
-            text.text = "no Pressed";
+            text.text = "---";
         }, this);
 
         this.mobileContainer.addChild(boostBtn);
@@ -279,6 +279,7 @@ export class GameScene
         swingBtn.interactive = true;
 
         swingBtn.on("touchstart",(e) => {
+            console.log(e);
             this.heroContainer.swingSword();
         }, this);
 
@@ -287,6 +288,6 @@ export class GameScene
         this.mobileContainer.y -= analogOuterCircle.height;
         this.container.addChild(this.mobileContainer);
 
-        new DebugCircle(this.mobileContainer, 10, this.container);
+        
     }
 }

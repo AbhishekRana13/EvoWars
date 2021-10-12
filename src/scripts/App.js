@@ -26,10 +26,9 @@ export class App {
             console.log(e);
 
             //this.app.resizeTo = window;
-//this.app.resize();
-           // appConfig.width = this.app.screen.width;
-           // appConfig.height = this.app.screen.height;
-            
+            //this.app.resize();
+            // appConfig.width = this.app.screen.width;
+            // appConfig.height = this.app.screen.height;
         }
 
         this.app.view.onpointerdown = (e) => {
