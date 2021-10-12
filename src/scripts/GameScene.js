@@ -1,4 +1,5 @@
 
+
 import * as PIXI from 'pixi.js';
 import { appConfig } from './appConfig';
 import { Background } from './Background';
@@ -6,7 +7,8 @@ import { Entity } from './Entity';
 import { gameSettings, Globals } from './Globals';
 import { Hero } from './Hero';
 import { getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
-
+import * as P2 from './p2';
+import { iBounds } from './iBounds';
 
 export class GameScene
 {
@@ -14,25 +16,33 @@ export class GameScene
     {
         this.container = new PIXI.Container();
         this.currentSpeed = gameSettings.speed;
-        this.createBackground();
+        
+
+
+        
+        this.createWorld(3);
         this.heroContainer();
 
         this.createEntities(10);
 
-  
+        
     }
+
    
-    createBackground()
+    createWorld(sizeMultiplier)
     {
         this.backgroundContainer = new PIXI.Container();
         
-        const background = new Background(Globals.resources.background.texture, 3);
+        const background = new Background(Globals.resources.background.texture, sizeMultiplier);
         background.anchor.set(0.5);
 
         this.backgroundContainer.x = appConfig.halfWidth;
         this.backgroundContainer.y = appConfig.halfHeight;
 
         this.backgroundContainer.addChild(background);
+        
+        this.backgroundContainer.iBounds = new iBounds(this.backgroundContainer);
+
         
         this.container.addChild(this.backgroundContainer);
 
@@ -73,8 +83,19 @@ export class GameScene
             const normalizeDir = normalize(direction);
 
             this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, normalizeDir);
+
+
             this.backgroundContainer.x -= normalizeDir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= normalizeDir.y *this.currentSpeed* dt;
+
+        
+            if(this.backgroundContainer.x < this.backgroundContainer.iBounds.sLeft)
+            {
+                this.backgroundContainer.x = this.backgroundContainer.iBounds.sLeft;
+            } else if ( this.backgroundContainer.x > this.backgroundContainer.iBounds.sRight)
+            {
+                this.backgroundContainer.x = this.backgroundContainer.iBounds.sRight;
+            }
         }
 
         

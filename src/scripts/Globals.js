@@ -1,8 +1,12 @@
+import * as PIXI from 'pixi.js';
+
 export const Globals = {
-    resources: {}
+    resources: {},
+    world : null,
+    worldBounds : new PIXI.Bounds()
 };
 
 export const gameSettings = {
-    speed : 1,
-    boostedSpeed : 5
+    speed : 5,
+    boostedSpeed : 12
 };
