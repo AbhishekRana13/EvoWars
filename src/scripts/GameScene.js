@@ -14,6 +14,12 @@ export class GameScene
 {
     constructor()
     {
+
+        Globals.world = new P2.World({
+            gravity : [0, 0],
+            broadphase : new P2.SAPBroadphase()
+        });
+
         this.container = new PIXI.Container();
         this.currentSpeed = gameSettings.speed;
         
@@ -25,12 +31,16 @@ export class GameScene
 
         this.createEntities(10);
 
+        this.initiateMobileInputs();
+
+        this.mobileDir = new PIXI.Point(0, 0);
         
     }
 
    
     createWorld(sizeMultiplier)
     {
+
         this.backgroundContainer = new PIXI.Container();
         
         const background = new Background(Globals.resources.background.texture, sizeMultiplier);
@@ -71,6 +81,21 @@ export class GameScene
 
     update(dt)
     {
+        
+
+       
+
+        
+        this.updateWithAnalog();
+        
+
+        this.entities.forEach(entity => {
+            entity.update(dt);
+        });
+    }
+
+    updateWithMouse()
+    {
         const heroPosition = this.heroContainer.position;
         const mousePosition = getMousePosition();
         
@@ -89,20 +114,30 @@ export class GameScene
             this.backgroundContainer.y -= normalizeDir.y *this.currentSpeed* dt;
 
         
-            if(this.backgroundContainer.x < this.backgroundContainer.iBounds.sLeft)
-            {
-                this.backgroundContainer.x = this.backgroundContainer.iBounds.sLeft;
-            } else if ( this.backgroundContainer.x > this.backgroundContainer.iBounds.sRight)
-            {
-                this.backgroundContainer.x = this.backgroundContainer.iBounds.sRight;
-            }
+            // if(this.backgroundContainer.x < this.backgroundContainer.iBounds.sLeft)
+            // {
+            //     this.backgroundContainer.x = this.backgroundContainer.iBounds.sLeft ;
+            // } else if ( this.backgroundContainer.x > this.backgroundContainer.iBounds.sRight)
+            // {
+            //     this.backgroundContainer.x = this.backgroundContainer.iBounds.sRight;
+            // }
+        }
+    }
+
+    updateWithAnalog(dt)
+    {
+
+        if(getMagnitude(this.mobileDir) != 0)
+        {
+            console.log(this.mobileDir);
+            this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, this.mobileDir);
+
+
+            this.backgroundContainer.x -= this.mobileDir.x *this.currentSpeed*dt;
+            this.backgroundContainer.y -= this.mobileDir.y *this.currentSpeed* dt;
         }
 
-        
 
-        this.entities.forEach(entity => {
-            entity.update(dt);
-        });
     }
 
     recievedMessage(msgType, msgParams)
@@ -118,8 +153,75 @@ export class GameScene
         } else if (msgType == "leftMouseDown")
         {
             this.heroContainer.swingSword();
+        } else if(msgType == "leftMouseUp")
+        {
+            this.hasMobileInputPressed = false;
+            this.analogInnerCircle.reset();
         }
         
         
+    }
+
+   
+
+    initiateMobileInputs()
+    {
+        this.mobileContainer = new PIXI.Container();
+        this.mobileContainer.position = new PIXI.Point(appConfig.halfWidth, appConfig.height);
+
+        const analogOuterCircle = new PIXI.Graphics();
+        analogOuterCircle.beginFill(0xcccccc);
+        analogOuterCircle.drawCircle(0, 0, appConfig.width * 0.06);
+        analogOuterCircle.endFill();
+
+        this.analogInnerCircle = new PIXI.Graphics();
+        this.analogInnerCircle.beginFill(0x5c5c5c);
+        this.analogInnerCircle.drawCircle(0, 0, appConfig.width * 0.01);
+        this.analogInnerCircle.endFill();
+
+        analogOuterCircle.interactive = true;
+
+        this.analogInnerCircle.reset = () => {
+            this.analogInnerCircle.x = 0;
+            this.analogInnerCircle.y = 0;
+        };
+        
+        analogOuterCircle.on("pointerdown", (e) => {
+            this.startPoint = e.data.global;
+            this.hasMobileInputPressed = true;
+        }, this);
+
+        analogOuterCircle.on("pointermove", (e) => {
+            if(this.hasMobileInputPressed)
+            {
+                const point = new PIXI.Point(e.data.global.x - this.mobileContainer.x, e.data.global.y - this.mobileContainer.y);
+                const direction = getDirectionBetween(analogOuterCircle.position, point);
+                this.mobileDir = normalize(direction);
+                if(getMagnitude(direction) < appConfig.width * 0.05)
+                {
+                    this.analogInnerCircle.x = point.x;
+                    this.analogInnerCircle.y = point.y;
+                } else
+                {
+                    
+                    this.analogInnerCircle.x = this.mobileDir.x * appConfig.width * 0.05;
+                    this.analogInnerCircle.y = this.mobileDir.y * appConfig.width * 0.05;
+                }
+              
+            }
+        }, this);
+
+        analogOuterCircle.on("pointerup", (e) => {
+            this.hasMobileInputPressed = false;
+            this.analogInnerCircle.reset();
+        }, this);
+
+
+
+        this.mobileContainer.addChild(analogOuterCircle);
+        this.mobileContainer.addChild(this.analogInnerCircle);
+
+        this.mobileContainer.y -= analogOuterCircle.height;
+        this.container.addChild(this.mobileContainer);
     }
 }

@@ -4,6 +4,7 @@ import { Globals } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { iBounds } from './iBounds';
+import { DebugCircle } from './DebugCircle';
 
 export class Hero extends PIXI.Container
 {
@@ -23,25 +24,26 @@ export class Hero extends PIXI.Container
         this.createSword();
         this.isSwinging = false;
 
-        this.visual.iBounds = new iBounds(this.visual);
-        //this.createBody();
+       // this.visual.iBounds = new iBounds(this.visual, gameConfig.widthRatio * 0.7);
+      //  this.createBody();
     }
 
     createBody()
     {
-        const body = new P2.Body({
+        this.body = new P2.Body({
             mass : 1,
-            position : [0, 0]
+            position : [this.x, this.y]
         });
 
         const circleShape = new P2.Circle({
-            radius : 5
+            radius : this.visual.width * gameConfig.widthRatio * 0.7/2
         });
 
-        body.addShape(circleShape);
-        Globals.world.addBody(body);
 
-        console.log(body);
+        this.body.addShape(circleShape);
+        Globals.world.addBody(this.body);
+
+        console.log(this.body);
 
     }
 
@@ -76,6 +78,12 @@ export class Hero extends PIXI.Container
                     .start();
             })
             .start();
+    }
+
+    update(dt)
+    {
+        
+        this.position = new PIXI.Point(this.body.position[0], this.body.position[1]);
     }
 
     

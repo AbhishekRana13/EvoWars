@@ -7,6 +7,6 @@ export const Globals = {
 };
 
 export const gameSettings = {
-    speed : 5,
-    boostedSpeed : 12
+    speed : 4,
+    boostedSpeed : 8
 };
