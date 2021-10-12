@@ -255,13 +255,13 @@ export class GameScene
         boostBtn.interactive = true;
         const text = new DebugText("no Pressed", 0, 0, "#000", 48);
         this.mobileContainer.addChild(text);
-        boostBtn.on("pointerdown",(e) => {
+        boostBtn.on("touchstart",(e) => {
             this.currentSpeed = gameSettings.boostedSpeed;
             console.log(e)
-            text.text = e.data.button;
+            text.text = e.pointerId;
         }, this);
 
-        boostBtn.on("pointerup",(e) => {
+        boostBtn.on("touchend",(e) => {
             this.currentSpeed = gameSettings.speed;
             text.text = "no Pressed";
         }, this);
