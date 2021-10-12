@@ -9,6 +9,7 @@ import { Hero } from './Hero';
 import { getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
 import * as P2 from './p2';
 import { iBounds } from './iBounds';
+import { DebugCircle } from './DebugCircle';
 
 export class GameScene
 {
@@ -31,8 +32,8 @@ export class GameScene
 
         this.createEntities(10);
 
-        console.log(PIXI.utils.isMobile.any);
-        if(PIXI.utils.isMobile.any)
+        console.log(Globals.isMobile);
+        if(Globals.isMobile)
         {
             this.initiateMobileInputs();
             this.mobileDir = new PIXI.Point(0, 0);
@@ -89,7 +90,7 @@ export class GameScene
 
        
 
-        if(PIXI.utils.isMobile.any)
+        if(Globals.isMobile)
             this.updateWithAnalog(dt);
         else
             this.updateWithMouse(dt);
@@ -160,11 +161,13 @@ export class GameScene
             this.currentSpeed = gameSettings.speed;
         } else if (msgType == "leftMouseDown")
         {
-            this.heroContainer.swingSword();
+            if(!Globals.isMobile)
+                this.heroContainer.swingSword();
         } else if(msgType == "leftMouseUp")
         {
             this.hasMobileInputPressed = false;
             this.analogInnerCircle.reset();
+            this.currentSpeed = gameSettings.speed;
         }
         
         
@@ -177,23 +180,33 @@ export class GameScene
         this.mobileContainer = new PIXI.Container();
         this.mobileContainer.position = new PIXI.Point(appConfig.halfWidth, appConfig.height);
 
+       
+        const radius = appConfig.height * 0.07;
+        const analogPoint = new PIXI.Point(-appConfig.halfWidth + radius * 2, 0);
         const analogOuterCircle = new PIXI.Graphics();
         analogOuterCircle.beginFill(0xcccccc);
-        analogOuterCircle.drawCircle(0, 0, appConfig.height * 0.07);
+        analogOuterCircle.drawCircle(0 , 0, radius);
         analogOuterCircle.endFill();
+        analogOuterCircle.x = analogPoint.x;
 
         this.analogInnerCircle = new PIXI.Graphics();
         this.analogInnerCircle.beginFill(0x5c5c5c);
         this.analogInnerCircle.drawCircle(0, 0, appConfig.height * 0.01);
         this.analogInnerCircle.endFill();
+        this.analogInnerCircle.x = analogPoint.x;
+        this.mobileContainer.addChild(analogOuterCircle);
+        this.mobileContainer.addChild(this.analogInnerCircle);
 
         analogOuterCircle.interactive = true;
-
+        
         this.analogInnerCircle.reset = () => {
-            this.analogInnerCircle.x = 0;
-            this.analogInnerCircle.y = 0;
+           //console.log(analogOuterCircle.x);
+            this.analogInnerCircle.x = analogOuterCircle.x;
+            this.analogInnerCircle.y = analogOuterCircle.y;
             this.mobileDir = new PIXI.Point(0, 0);
         };
+
+        console.log(this.mobileContainer);
         
         analogOuterCircle.on("pointerdown", (e) => {
             this.startPoint = e.data.global;
@@ -204,17 +217,18 @@ export class GameScene
             if(this.hasMobileInputPressed)
             {
                 const point = new PIXI.Point(e.data.global.x - this.mobileContainer.x, e.data.global.y - this.mobileContainer.y);
-                const direction = getDirectionBetween(analogOuterCircle.position, point);
+                
+                const direction = getDirectionBetween(analogPoint, point);
                 this.mobileDir = normalize(direction);
-                if(getMagnitude(direction) < appConfig.height * 0.06)
+                if(getMagnitude(direction) < radius)
                 {
                     this.analogInnerCircle.x = point.x;
                     this.analogInnerCircle.y = point.y;
                 } else
                 {
                     
-                    this.analogInnerCircle.x = this.mobileDir.x * appConfig.height * 0.06;
-                    this.analogInnerCircle.y = this.mobileDir.y * appConfig.height * 0.06;
+                    this.analogInnerCircle.x = analogPoint.x + this.mobileDir.x * radius;
+                    this.analogInnerCircle.y = analogPoint.y + this.mobileDir.y * radius;
                 }
               
             }
@@ -228,10 +242,30 @@ export class GameScene
 
 
 
-        this.mobileContainer.addChild(analogOuterCircle);
-        this.mobileContainer.addChild(this.analogInnerCircle);
+
+        //Boost Button
+        const boostBtn = new PIXI.Graphics();
+        boostBtn.beginFill(0xFF7F50);
+        boostBtn.drawCircle(0 , 0, radius * 0.6);
+        boostBtn.endFill();
+        boostBtn.x = -analogPoint.x + radius;
+        boostBtn.y -= radius;
+
+        boostBtn.interactive = true;
+
+        boostBtn.on("pointerdown",() => {
+            this.currentSpeed = gameSettings.boostedSpeed;
+        }, this);
+
+        boostBtn.on("pointerup",() => {
+            this.currentSpeed = gameSettings.speed;
+        }, this);
+
+        this.mobileContainer.addChild(boostBtn);
 
         this.mobileContainer.y -= analogOuterCircle.height;
         this.container.addChild(this.mobileContainer);
+
+        new DebugCircle(this.mobileContainer, 10, this.container);
     }
 }

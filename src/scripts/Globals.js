@@ -3,7 +3,12 @@ import * as PIXI from 'pixi.js';
 export const Globals = {
     resources: {},
     world : null,
-    worldBounds : new PIXI.Bounds()
+    worldBounds : new PIXI.Bounds(),
+    get isMobile() {
+        return true;
+        //return PIXI.utils.isMobile.any;
+    }
+    
 };
 
 export const gameSettings = {
