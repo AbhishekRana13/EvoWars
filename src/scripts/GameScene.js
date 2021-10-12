@@ -268,6 +268,22 @@ export class GameScene
 
         this.mobileContainer.addChild(boostBtn);
 
+
+        //Fire Button
+        const swingBtn = new PIXI.Graphics();
+        swingBtn.beginFill(0x3CB371);
+        swingBtn.drawCircle(0 , 0, radius * 0.6);
+        swingBtn.endFill();
+        swingBtn.x = -analogPoint.x;
+        swingBtn.y += radius * 0.5;
+        swingBtn.interactive = true;
+
+        swingBtn.on("touchstart",(e) => {
+            this.heroContainer.swingSword();
+        }, this);
+
+        this.mobileContainer.addChild(swingBtn);
+
         this.mobileContainer.y -= analogOuterCircle.height;
         this.container.addChild(this.mobileContainer);
 
