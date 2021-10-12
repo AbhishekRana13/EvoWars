@@ -130,6 +130,7 @@ export class GameScene
         if(getMagnitude(this.mobileDir) != 0)
         {
             console.log(this.mobileDir);
+            
             this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, this.mobileDir);
 
 

@@ -32,7 +32,7 @@ export class App {
             
         }
 
-        this.app.view.onmousedown = (e) => {
+        this.app.view.onpointerdown = (e) => {
             if(e.button == 0)
             {
                 Globals.emitter.Call("leftMouseDown");
@@ -42,7 +42,9 @@ export class App {
             }
         };
 
-        this.app.view.onmouseup = (e) => {
+        
+
+        this.app.view.onpointerup = (e) => {
             if(e.button == 0)
             {
                 Globals.emitter.Call("leftMouseUp");
