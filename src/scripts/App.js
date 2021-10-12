@@ -85,7 +85,7 @@ export class App {
 
     addOrientationCheck()
     {
-        if(PIXI.utils.isMobile)
+        if(PIXI.utils.isMobile.any)
         {
 
             window.addEventListener("orientationchange", function() {
@@ -96,6 +96,7 @@ export class App {
                 }
                 });
         }
+        
     }
 
 }

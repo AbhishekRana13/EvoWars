@@ -31,9 +31,13 @@ export class GameScene
 
         this.createEntities(10);
 
-        this.initiateMobileInputs();
+        console.log(PIXI.utils.isMobile.any);
+        if(PIXI.utils.isMobile.any)
+        {
+            this.initiateMobileInputs();
+            this.mobileDir = new PIXI.Point(0, 0);
+        }
 
-        this.mobileDir = new PIXI.Point(0, 0);
         
     }
 
@@ -85,8 +89,10 @@ export class GameScene
 
        
 
-        
-        this.updateWithAnalog(dt);
+        if(PIXI.utils.isMobile.any)
+            this.updateWithAnalog(dt);
+        else
+            this.updateWithMouse(dt);
         
 
         this.entities.forEach(entity => {
@@ -94,7 +100,7 @@ export class GameScene
         });
     }
 
-    updateWithMouse()
+    updateWithMouse(dt)
     {
         const heroPosition = this.heroContainer.position;
         const mousePosition = getMousePosition();
