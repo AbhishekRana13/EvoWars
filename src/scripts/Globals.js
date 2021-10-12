@@ -5,8 +5,8 @@ export const Globals = {
     world : null,
     worldBounds : new PIXI.Bounds(),
     get isMobile() {
-        return true;
-        //return PIXI.utils.isMobile.any;
+        // return true;
+        return PIXI.utils.isMobile.any;
     }
     
 };
