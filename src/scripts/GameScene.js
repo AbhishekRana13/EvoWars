@@ -10,6 +10,7 @@ import { getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, g
 import * as P2 from './p2';
 import { iBounds } from './iBounds';
 import { DebugCircle } from './DebugCircle';
+import { DebugText } from './DebugText';
 
 export class GameScene
 {
@@ -167,7 +168,7 @@ export class GameScene
         {
             this.hasMobileInputPressed = false;
             this.analogInnerCircle.reset();
-            this.currentSpeed = gameSettings.speed;
+         
         }
         
         
@@ -252,13 +253,17 @@ export class GameScene
         boostBtn.y -= radius;
 
         boostBtn.interactive = true;
-
-        boostBtn.on("pointerdown",() => {
+        const text = new DebugText("no Pressed", 0, 0, "#000", 48);
+        this.mobileContainer.addChild(text);
+        boostBtn.on("pointerdown",(e) => {
             this.currentSpeed = gameSettings.boostedSpeed;
+            console.log(e)
+            text.text = e.data.button;
         }, this);
 
-        boostBtn.on("pointerup",() => {
+        boostBtn.on("pointerup",(e) => {
             this.currentSpeed = gameSettings.speed;
+            text.text = "no Pressed";
         }, this);
 
         this.mobileContainer.addChild(boostBtn);
