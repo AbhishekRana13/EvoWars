@@ -139,11 +139,14 @@ export class GameScene
             this.updateWithAnalog(dt);
         else
             this.updateWithMouse(dt);
+
+        this.backgroundContainer.x = clamp(this.backgroundContainer.x, this.worldBounds.left, this.worldBounds.right);
+        this.backgroundContainer.y = clamp(this.backgroundContainer.y, this.worldBounds.top, this.worldBounds.bottom);
         
         this.heroContainer.update(dt);
 
         this.entities.forEach(entity => {
-           // entity.update(dt);
+            entity.update(dt);
         });
     }
 
@@ -161,8 +164,7 @@ export class GameScene
             console.log(this.backgroundContainer.width);
             
 
-            this.backgroundContainer.x = clamp(this.backgroundContainer.x, this.worldBounds.left, this.worldBounds.right);
-            this.backgroundContainer.y = clamp(this.backgroundContainer.y, this.worldBounds.top, this.worldBounds.bottom);
+            
         }
     }
 
@@ -171,13 +173,13 @@ export class GameScene
 
         if(getMagnitude(this.mobileDir) != 0 && !this.heroContainer.isSwinging)
         {
-            this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, this.mobileDir);
+            this.heroContainer.body.angle = getAngleInRadian({x: 0, y : -1}, this.mobileDir);
 
             this.backgroundContainer.x -= this.mobileDir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= this.mobileDir.y *this.currentSpeed*dt;
             
 
-            this.backgroundContainer.x = Math.cl
+            //his.backgroundContainer.x = Math.cl
         }
 
 

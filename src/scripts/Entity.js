@@ -14,7 +14,7 @@ export class Entity extends PIXI.Container
         this.createEntityVisual();
 
         this.createBody(parentContainer, world);
-        
+
         parentContainer.addChild(this);
 
         this.direction = new PIXI.Point((Math.random() * 2) - 1, (Math.random() * 2) - 1);
@@ -92,7 +92,8 @@ export class Entity extends PIXI.Container
         this.body.position[0] += this.currentDirection.x * dt;
         this.body.position[1] += this.currentDirection.y * dt;
 
-        this.body.position[0] = clamp(this.body.position[0])
+        this.body.position[0] = clamp(this.body.position[0], -this.parent.width/2 + this.width, this.parent.width/2 - this.width);
+        this.body.position[1] = clamp(this.body.position[1], -this.parent.height/2 + this.width, this.parent.height/2 - this.width);
 
         this.x = this.body.position[0];
         this.y = this.body.position[1];
