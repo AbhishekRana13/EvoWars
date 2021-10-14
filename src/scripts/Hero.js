@@ -3,50 +3,62 @@ import { appConfig, gameConfig } from './appConfig';
 import { Globals } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
-import { iBounds } from './iBounds';
 import { DebugCircle } from './DebugCircle';
+import { getDirectionBetween, getMagnitude, getMousePosition, normalize } from './Utilities';
 
 export class Hero extends PIXI.Container
 {
-    constructor()
+    constructor(world)
     {
         super();
-
-        this.visual = new PIXI.Sprite(Globals.resources.hero.texture);
-        this.visual.anchor.set(0.5);
-        
-        this.addChild(this.visual);
-        
         this.scale.set(gameConfig.widthRatio * 0.7);
-        this.x = appConfig.halfWidth;
-        this.y = appConfig.halfHeight;
-
+        
+        this.createHeroVisual();
         this.createSword();
+        this.createBody(world);
+        
         this.isSwinging = false;
-
-       // this.visual.iBounds = new iBounds(this.visual, gameConfig.widthRatio * 0.7);
-      //  this.createBody();
     }
 
-    createBody()
+    createHeroVisual()
+    {
+        this.visual = new PIXI.Sprite(Globals.resources.hero.texture);
+        this.visual.anchor.set(0.5);
+        this.addChild(this.visual);
+    }
+
+    createBody(world)
     {
         this.body = new P2.Body({
-            mass : 1,
-            position : [this.x, this.y]
+            mass : 1,//type : P2.Body.KINEMATIC,
+            position : [appConfig.halfWidth, appConfig.halfHeight],
+            fixedRotation : true
         });
 
         const circleShape = new P2.Circle({
-            radius : this.visual.width * gameConfig.widthRatio * 0.7/2
+            radius : this.globalWidth/2,
+           // sensor : true
         });
 
-
         this.body.addShape(circleShape);
-        Globals.world.addBody(this.body);
+        
+        world.addBody(this.body);
 
-        console.log(this.body);
+        this.addBodyVisualisation(circleShape);
 
+        
     }
 
+    addBodyVisualisation(circleShape)
+    {
+        this.bodyVisual = new PIXI.Graphics();
+        this.bodyVisual.beginFill(0x00ff00, 0.3);
+        console.log(circleShape);
+        this.bodyVisual.drawCircle(0, 0, this.visual.width/2);
+        this.bodyVisual.endFill();
+
+        this.addChild(this.bodyVisual);
+    }
 
     createSword()
     {
@@ -57,8 +69,6 @@ export class Hero extends PIXI.Container
         this.sword.x -= this.visual.width * 0.8;
         this.sword.angle = -20;
         this.addChild(this.sword);
-
-        
     }
 
     swingSword()
@@ -80,10 +90,39 @@ export class Hero extends PIXI.Container
             .start();
     }
 
+    get globalWidth()
+    {
+        return this.visual.width * this.scale.x;
+    }
+
+    get globalHeight()
+    {
+        return this.visual.height * this.scale.y;
+    }
+
+    get getMouseDirection()
+    {
+       // return null;
+        if(this.isSwinging) return null;
+
+        const position = this.position;
+        const mousePosition = getMousePosition();
+        
+        const direction = getDirectionBetween(position, mousePosition);
+        const widthToCompare = this.globalWidth/2;
+
+        
+        return (getMagnitude(direction) > widthToCompare) ? normalize(direction) : null;
+    }
+
+    
+
     update(dt)
     {
-        
-        this.position = new PIXI.Point(this.body.position[0], this.body.position[1]);
+        this.x = this.body.position[0];
+        this.y = this.body.position[1];
+
+        this.rotation = this.body.angle;
     }
 
     

@@ -6,9 +6,8 @@ import { Background } from './Background';
 import { Entity } from './Entity';
 import { gameSettings, Globals } from './Globals';
 import { Hero } from './Hero';
-import { getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
+import { clamp, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
 import * as P2 from './p2';
-import { iBounds } from './iBounds';
 import { DebugCircle } from './DebugCircle';
 import { DebugText } from './DebugText';
 
@@ -29,7 +28,7 @@ export class GameScene
 
         
         this.createWorld(3);
-        this.heroContainer();
+        this.createHeroContainer();
 
         this.createEntities(10);
 
@@ -41,11 +40,54 @@ export class GameScene
         }
 
         
+        
+        this.worldBounds = {};
+        
+        this.worldBounds.left = appConfig.halfWidth - this.backgroundContainer.width/2 + this.heroContainer.globalWidth;
+        this.worldBounds.right = appConfig.halfWidth + this.backgroundContainer.width/2 - this.heroContainer.globalWidth;
+
+
+        this.worldBounds.top = appConfig.halfHeight - this.backgroundContainer.height/2 + this.heroContainer.globalHeight;
+        this.worldBounds.bottom = appConfig.halfHeight + this.backgroundContainer.height/2 - this.heroContainer.globalHeight;
+        //this.createTestBlock();
+
+        
     }
 
+
+    createTestBlock()
+    {
+        const boxShape = new P2.Box({ width: 200, height: 100 });
+       // boxShape.sensor = true;
+        this.boxBody = new P2.Body({
+            //type : P2.Body.STATIC,
+                mass : 0,
+                position:[appConfig.halfWidth,appConfig.halfHeight + 200],
+                angle : 30
+            });
+        this.boxBody.addShape(boxShape);
+        
+        this.world.addBody(this.boxBody);
+
+        this.graphicBox = new PIXI.Graphics();
+        this.graphicBox.beginFill(0xff0000);
+        this.graphicBox.drawRect(-boxShape.width/2, -boxShape.height/2, boxShape.width, boxShape.height);
+
+            // Add the box to our container
+        this.container.addChild(this.graphicBox);
+    }
    
     createWorld(sizeMultiplier)
     {
+
+        this.world = new P2.World({
+            gravity : [0, 0]
+        });
+
+        this.world.on("beginContact", (evt) => {
+            console.log(evt.bodyA);
+            console.log(evt.bodyB);
+        }, this);
 
         this.backgroundContainer = new PIXI.Container();
         
@@ -57,8 +99,7 @@ export class GameScene
 
         this.backgroundContainer.addChild(background);
         
-        this.backgroundContainer.iBounds = new iBounds(this.backgroundContainer);
-
+    
         
         this.container.addChild(this.backgroundContainer);
 
@@ -66,9 +107,9 @@ export class GameScene
     }
 
 
-    heroContainer()
+    createHeroContainer()
     {
-        this.heroContainer = new Hero();
+        this.heroContainer = new Hero(this.world);
         
         this.container.addChild(this.heroContainer);
     }
@@ -78,7 +119,7 @@ export class GameScene
         this.entities = [];
 
         for (let i = 0; i < noOfEntities; i++) {
-            const entity = new Entity(this.backgroundContainer);
+            const entity = new Entity(this.backgroundContainer, this.world);
 
             this.entities.push(entity);
         }
@@ -88,63 +129,55 @@ export class GameScene
     update(dt)
     {
         
+        this.world.step(dt);
 
-       
+        // this.graphicBox.x = this.boxBody.position[0];
+        // this.graphicBox.y = this.boxBody.position[1];
+        // this.graphicBox.rotation = this.boxBody.angle;
 
         if(Globals.isMobile)
             this.updateWithAnalog(dt);
         else
             this.updateWithMouse(dt);
         
+        this.heroContainer.update(dt);
 
         this.entities.forEach(entity => {
-            entity.update(dt);
+           // entity.update(dt);
         });
     }
 
     updateWithMouse(dt)
     {
-        const heroPosition = this.heroContainer.position;
-        const mousePosition = getMousePosition();
+        const dir = this.heroContainer.getMouseDirection;
         
-
-        const direction = getDirectionBetween(heroPosition, mousePosition);
-        const widthToCompare = this.heroContainer.visual.width * this.heroContainer.scale.x;
-        
-        if(getMagnitude(direction) > widthToCompare/2)
+        if(dir != null)
         {
-            const normalizeDir = normalize(direction);
+            this.heroContainer.body.angle = getAngleInRadian({x: 0, y : -1}, dir);
 
-            this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, normalizeDir);
+            this.backgroundContainer.x -= dir.x *this.currentSpeed*dt;
+            this.backgroundContainer.y -= dir.y *this.currentSpeed*dt;
 
+            console.log(this.backgroundContainer.width);
+            
 
-            this.backgroundContainer.x -= normalizeDir.x *this.currentSpeed*dt;
-            this.backgroundContainer.y -= normalizeDir.y *this.currentSpeed* dt;
-
-        
-            // if(this.backgroundContainer.x < this.backgroundContainer.iBounds.sLeft)
-            // {
-            //     this.backgroundContainer.x = this.backgroundContainer.iBounds.sLeft ;
-            // } else if ( this.backgroundContainer.x > this.backgroundContainer.iBounds.sRight)
-            // {
-            //     this.backgroundContainer.x = this.backgroundContainer.iBounds.sRight;
-            // }
+            this.backgroundContainer.x = clamp(this.backgroundContainer.x, this.worldBounds.left, this.worldBounds.right);
+            this.backgroundContainer.y = clamp(this.backgroundContainer.y, this.worldBounds.top, this.worldBounds.bottom);
         }
     }
 
     updateWithAnalog(dt)
     {
 
-        if(getMagnitude(this.mobileDir) != 0)
+        if(getMagnitude(this.mobileDir) != 0 && !this.heroContainer.isSwinging)
         {
-            
-
             this.heroContainer.angle = getAngleBetween({x: 0, y : -1}, this.mobileDir);
-
 
             this.backgroundContainer.x -= this.mobileDir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= this.mobileDir.y *this.currentSpeed*dt;
-           
+            
+
+            this.backgroundContainer.x = Math.cl
         }
 
 
@@ -166,8 +199,12 @@ export class GameScene
                 this.heroContainer.swingSword();
         } else if(msgType == "leftMouseUp")
         {
-            this.hasMobileInputPressed = false;
-            this.analogInnerCircle.reset();
+            if(PIXI.utils.isMobile.any)
+            {
+                this.hasMobileInputPressed = false;
+                this.analogInnerCircle.reset();
+            }
+            
             
             
         }
