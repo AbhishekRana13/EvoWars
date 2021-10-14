@@ -46,14 +46,14 @@ export class Hero extends PIXI.Container
 
         this.addBodyVisualisation(circleShape);
 
-        
+        console.log(circleShape);
     }
 
     addBodyVisualisation(circleShape)
     {
         this.bodyVisual = new PIXI.Graphics();
         this.bodyVisual.beginFill(0x00ff00, 0.3);
-        console.log(circleShape);
+        
         this.bodyVisual.drawCircle(0, 0, this.visual.width/2);
         this.bodyVisual.endFill();
 
@@ -102,7 +102,7 @@ export class Hero extends PIXI.Container
 
     get getMouseDirection()
     {
-       // return null;
+       //return null;
         if(this.isSwinging) return null;
 
         const position = this.position;

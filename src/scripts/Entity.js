@@ -39,8 +39,8 @@ export class Entity extends PIXI.Container
 
     createBody(parentContainer, world)
     {
-        const randomX = (Math.random() * parentContainer.width) - parentContainer.width/2;
-        const randomY = (Math.random() * parentContainer.height) - parentContainer.height/2;
+        const randomX = (Math.random() * parentContainer.width) - (parentContainer.width/2 + this.width);
+        const randomY = (Math.random() * parentContainer.height) - (parentContainer.height/2 + this.width);
 
         this.body = new P2.Body({
             mass : 1,
@@ -59,6 +59,7 @@ export class Entity extends PIXI.Container
 
         this.addBodyVisualisation(circleShape);
 
+        console.log(circleShape);
         
     }
 

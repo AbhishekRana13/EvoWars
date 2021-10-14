@@ -85,8 +85,12 @@ export class GameScene
         });
 
         this.world.on("beginContact", (evt) => {
-            console.log(evt.bodyA);
-            console.log(evt.bodyB);
+            if(evt.bodyA == this.heroContainer.body || evt.bodyB == this.heroContainer.body)
+            {
+                console.log("Hero collided ");
+            }
+            //console.log(evt.bodyA);
+           // console.log(evt.bodyB);
         }, this);
 
         this.backgroundContainer = new PIXI.Container();
@@ -160,7 +164,6 @@ export class GameScene
 
             this.backgroundContainer.x -= dir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= dir.y *this.currentSpeed*dt;
-
             console.log(this.backgroundContainer.width);
             
 
