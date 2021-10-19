@@ -24,7 +24,7 @@ export class Entity extends PIXI.Container
             this.direction = new PIXI.Point((Math.random() * 2) - 1, (Math.random() * 2) - 1);
 
             new TWEEN.Tween(this.currentDirection).to({x : this.direction.x, y : this.direction.y}, 2000).start();
-        }, 10000);
+        }, 3000);
 
         
     }
@@ -39,15 +39,16 @@ export class Entity extends PIXI.Container
 
     createBody(parentContainer, world)
     {
-        const randomX = (Math.random() * parentContainer.width) - (parentContainer.width/2 + this.width);
-        const randomY = (Math.random() * parentContainer.height) - (parentContainer.height/2 + this.width);
+        this.offsetX = (Math.random() * parentContainer.width) - parentContainer.width/2;
+        this.offsetY = (Math.random() * parentContainer.height) - parentContainer.height/2;
 
         this.body = new P2.Body({
             mass : 1,
-            position : [randomX, randomY],
+            position : [parentContainer.x + this.offsetX, parentContainer.y + this.offsetY],
             fixedRotation : true
         });
-
+        //console.log(parentContainer.width, parentContainer.height)
+       // console.log(this.offsetX, this.offsetY);
         const circleShape = new P2.Circle({
             radius : this.globalWidth/2,
           // sensor : true
@@ -59,7 +60,8 @@ export class Entity extends PIXI.Container
 
         this.addBodyVisualisation(circleShape);
 
-        console.log(circleShape);
+       // console.log(circleShape);
+
         
     }
 
@@ -68,10 +70,10 @@ export class Entity extends PIXI.Container
         this.bodyVisual = new PIXI.Graphics();
         this.bodyVisual.beginFill(0xff0000, 0.3);
         
-        this.bodyVisual.drawCircle(0, 0, this.visual.width/2);
+        this.bodyVisual.drawCircle(0, 0, circleShape.radius);
         this.bodyVisual.endFill();
 
-        this.addChild(this.bodyVisual);
+        //this.addChild(this.bodyVisual);
     }
 
     get globalWidth()
@@ -84,20 +86,41 @@ export class Entity extends PIXI.Container
         return this.visual.height * this.scale.y;
     }
 
+    get globalPosition()
+    {
+        let point = new PIXI.Point();
+
+        this.getGlobalPosition(point, false);
+        
+        return point;
+    }
+
     update(dt)
     {
+        
+        //return;
         this.body.angle = getAngleInRadian({x : 0, y : -1}, this.currentDirection);
         
+        this.offsetX += this.currentDirection.x * dt * 5;
+        this.offsetY += this.currentDirection.y * dt * 5;
+        this.body.position[0] = this.parent.x + this.offsetX;
+        this.body.position[1] = this.parent.y + this.offsetY;
+        this.offsetX = clamp(this.offsetX, -this.parent.width/2 + this.globalWidth, this.parent.width/2 - this.globalWidth);
+        this.offsetY = clamp(this.offsetY, -this.parent.height/2 + this.globalHeight, this.parent.height/2 - this.globalHeight);
 
-        
-        this.body.position[0] += this.currentDirection.x * dt;
-        this.body.position[1] += this.currentDirection.y * dt;
-
-        this.body.position[0] = clamp(this.body.position[0], -this.parent.width/2 + this.width, this.parent.width/2 - this.width);
-        this.body.position[1] = clamp(this.body.position[1], -this.parent.height/2 + this.width, this.parent.height/2 - this.width);
-
-        this.x = this.body.position[0];
-        this.y = this.body.position[1];
+        this.x = this.body.position[0] - this.parent.x;
+        this.y = this.body.position[1] - this.parent.y;
         this.rotation = this.body.angle;
+
+      //  console.log(this.globalPosition);
+      //  console.log(this.parent.position);
+      //  console.log(this.body.position);
+        this.updateBodyVisual(dt);
+    }
+
+    updateBodyVisual(dt)
+    {
+        this.bodyVisual.x = this.body.position[0];
+        this.bodyVisual.y = this.body.position[1];
     }
 }

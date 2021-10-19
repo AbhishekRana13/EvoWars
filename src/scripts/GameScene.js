@@ -103,7 +103,8 @@ export class GameScene
 
         this.backgroundContainer.addChild(background);
         
-    
+        
+        
         
         this.container.addChild(this.backgroundContainer);
 
@@ -116,6 +117,8 @@ export class GameScene
         this.heroContainer = new Hero(this.world);
         
         this.container.addChild(this.heroContainer);
+
+        this.container.addChild(this.heroContainer.bodyVisual);
     }
 
     createEntities(noOfEntities)
@@ -124,8 +127,11 @@ export class GameScene
 
         for (let i = 0; i < noOfEntities; i++) {
             const entity = new Entity(this.backgroundContainer, this.world);
-
+            this.container.addChild(entity.bodyVisual);
             this.entities.push(entity);
+
+
+            
         }
     }
 

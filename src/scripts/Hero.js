@@ -37,7 +37,7 @@ export class Hero extends PIXI.Container
 
         const circleShape = new P2.Circle({
             radius : this.globalWidth/2,
-           // sensor : true
+           sensor : true
         });
 
         this.body.addShape(circleShape);
@@ -54,10 +54,10 @@ export class Hero extends PIXI.Container
         this.bodyVisual = new PIXI.Graphics();
         this.bodyVisual.beginFill(0x00ff00, 0.3);
         
-        this.bodyVisual.drawCircle(0, 0, this.visual.width/2);
+        this.bodyVisual.drawCircle(0, 0, circleShape.radius);
         this.bodyVisual.endFill();
 
-        this.addChild(this.bodyVisual);
+       
     }
 
     createSword()
@@ -101,8 +101,9 @@ export class Hero extends PIXI.Container
     }
 
     get getMouseDirection()
-    {
-       //return null;
+    {    
+        
+      //return null;
         if(this.isSwinging) return null;
 
         const position = this.position;
@@ -123,6 +124,9 @@ export class Hero extends PIXI.Container
         this.y = this.body.position[1];
 
         this.rotation = this.body.angle;
+        
+        this.bodyVisual.x = this.body.position[0];
+        this.bodyVisual.y = this.body.position[1];
     }
 
     
