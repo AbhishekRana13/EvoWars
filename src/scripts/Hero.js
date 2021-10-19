@@ -4,7 +4,7 @@ import { Globals } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { DebugCircle } from './DebugCircle';
-import { getDirectionBetween, getMagnitude, getMousePosition, normalize } from './Utilities';
+import { fetchGlobalPosition, getDirectionBetween, getMagnitude, getMousePosition, normalize } from './Utilities';
 
 export class Hero extends PIXI.Container
 {
@@ -14,10 +14,12 @@ export class Hero extends PIXI.Container
         this.scale.set(gameConfig.widthRatio * 0.7);
         
         this.createHeroVisual();
-        this.createSword();
         this.createBody(world);
-        
+        this.createSword(world);
         this.isSwinging = false;
+
+
+        this.checkHit = false;
     }
 
     createHeroVisual()
@@ -60,7 +62,9 @@ export class Hero extends PIXI.Container
        
     }
 
-    createSword()
+    
+
+    createSword(world)
     {
         this.sword = new PIXI.Sprite(Globals.resources.sword.texture);
         this.sword.scale.set(0.8);
@@ -68,20 +72,87 @@ export class Hero extends PIXI.Container
 
         this.sword.x -= this.visual.width * 0.8;
         this.sword.angle = -20;
+        
         this.addChild(this.sword);
+
+       this.debugSword();
+
+       this.createTriggerCenter();
+       
+       this.sBody = new P2.Body({
+            mass : 1,//type : P2.Body.KINEMATIC,
+            position : [0, 0],
+            fixedRotation : true
+        });
+
+       
+
+        const circleShape = new P2.Circle({
+            radius : this.globalWidth * 0.8,
+            sensor : true
+        });
+
+        this.sBody.addShape(circleShape);
+        
+        world.addBody(this.sBody);
+        
+
+        this.sBodyVisualization(circleShape);
+
+       
     }
+
+    createTriggerCenter()
+    {
+        this.triggerCenter = new PIXI.Container();
+        
+        this.triggerCenter.y =  - this.visual.width * 0.6;
+        const center = new PIXI.Graphics();
+        center.beginFill(0x00ffff);
+        
+        center.drawCircle(0, 0, 10);
+        center.endFill();
+
+        this.triggerCenter.addChild(center);
+
+        this.addChild(this.triggerCenter);
+    }
+
+    debugSword()
+    {
+        const graphic = new PIXI.Graphics();
+        graphic.beginFill(0x00ff00, 0.5);
+  
+        graphic.drawRect(this.sword.x - this.sword.width/2, this.sword.y - this.sword.height, this.sword.width  , this.sword.height);
+        graphic.endFill();
+        graphic.angle = this.sword.angle;
+        this.addChild(graphic);
+    }
+
+
+    sBodyVisualization(shape)
+    {
+        this.sBodyVisual = new PIXI.Graphics();
+        this.sBodyVisual.beginFill(0x00ffff, 0.3);
+        
+        this.sBodyVisual.drawCircle(0, 0, shape.radius);
+        this.sBodyVisual.endFill();
+    }
+
 
     swingSword()
     {
         if(this.isSwinging) return;
         this.isSwinging = true;
+        this.checkHit = true;
         new TWEEN.Tween(this.sword)
-            .to({angle : 90, x : 0, y : -this.visual.width * 0.8}, 350)
+            .to({angle : 90, x : 0, y : -this.visual.width * 0.8, scale : {x : 0.7, y : 0.9} }, 150)
             .easing(Easing.Back.In)
             .onComplete((object) => {
+                this.checkHit = false;
                 new TWEEN.Tween(object)
-                    .to({angle : -20, x : -this.visual.width * 0.8, y : 0}, 150)
-                    .delay(500)
+                    .to({angle : -20, x : -this.visual.width * 0.8, y : 0, scale : {x : 0.8, y : 0.8}}, 150)
+                    .delay(150)
                     .onComplete(() => {
                         this.isSwinging = false;
                     })
@@ -100,10 +171,38 @@ export class Hero extends PIXI.Container
         return this.visual.height * this.scale.y;
     }
 
+    
+
     get getMouseDirection()
-    {    
+    {   
+        this.sBody.position = [fetchGlobalPosition(this.triggerCenter).x, fetchGlobalPosition(this.triggerCenter).y];
+
+
+        this.sBodyVisual.x = this.sBody.position[0];
+        this.sBodyVisual.y = this.sBody.position[1];
+        this.sBodyVisual.rotation = this.sBody.angle;
+
+        //this.sword.x = this.sBody.position[0] - this.x;
+       // this.sword.y = this.sBody.position[1] - this.y;
+     //   this.sword.rotation = this.sBody.angle;
+     // return null;
+
+        if(this.checkHit)
+        {
+            for (let i = Globals.entities.length-1; i >= 0; i--) {
+                const entity = Globals.entities[i];
+                
+                if(this.sBody.overlaps(entity.body))
+                {
+                    console.log("OVERLAPED");
+                    Globals.world.removeBody(entity.body);
+                    
+                    entity.destroy();
+                    Globals.entities.splice(i, 1);
+                }
+            }
+        }
         
-      //return null;
         if(this.isSwinging) return null;
 
         const position = this.position;

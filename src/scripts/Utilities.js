@@ -39,3 +39,9 @@ export const degreeToRadian = (angleInDeg) => angleInDeg * (Math.PI / 180);
 export const getPointOnCircle = (cVec1, radius, angle) => new PIXI.Point(cVec1.x + radius * Math.cos(angle), cVec1.y + radius * Math.sin(angle));
 
 export const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+export const fetchGlobalPosition = (component) => {
+    let point = new PIXI.Point();
+    component.getGlobalPosition(point, false);
+    return point;
+};

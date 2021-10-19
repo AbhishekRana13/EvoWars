@@ -16,10 +16,6 @@ export class GameScene
     constructor()
     {
 
-        Globals.world = new P2.World({
-            gravity : [0, 0],
-            broadphase : new P2.SAPBroadphase()
-        });
 
         this.container = new PIXI.Container();
         this.currentSpeed = gameSettings.speed;
@@ -80,11 +76,11 @@ export class GameScene
     createWorld(sizeMultiplier)
     {
 
-        this.world = new P2.World({
+        Globals.world = new P2.World({
             gravity : [0, 0]
         });
 
-        this.world.on("beginContact", (evt) => {
+        Globals.world.on("beginContact", (evt) => {
             if(evt.bodyA == this.heroContainer.body || evt.bodyB == this.heroContainer.body)
             {
                 console.log("Hero collided ");
@@ -114,21 +110,23 @@ export class GameScene
 
     createHeroContainer()
     {
-        this.heroContainer = new Hero(this.world);
+        this.heroContainer = new Hero(Globals.world);
         
         this.container.addChild(this.heroContainer);
 
         this.container.addChild(this.heroContainer.bodyVisual);
+        this.container.addChild(this.heroContainer.sBodyVisual);
+
     }
 
     createEntities(noOfEntities)
     {
-        this.entities = [];
+        Globals.entities = [];
 
         for (let i = 0; i < noOfEntities; i++) {
-            const entity = new Entity(this.backgroundContainer, this.world);
+            const entity = new Entity(this.backgroundContainer, Globals.world);
             this.container.addChild(entity.bodyVisual);
-            this.entities.push(entity);
+            Globals.entities.push(entity);
 
 
             
@@ -139,7 +137,7 @@ export class GameScene
     update(dt)
     {
         
-        this.world.step(dt);
+        Globals.world.step(dt);
 
         // this.graphicBox.x = this.boxBody.position[0];
         // this.graphicBox.y = this.boxBody.position[1];
@@ -155,7 +153,7 @@ export class GameScene
         
         this.heroContainer.update(dt);
 
-        this.entities.forEach(entity => {
+        Globals.entities.forEach(entity => {
             entity.update(dt);
         });
     }
