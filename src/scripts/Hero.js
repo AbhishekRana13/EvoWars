@@ -196,7 +196,7 @@ export class Hero extends PIXI.Container
                     entity.destroy();
                     Globals.entities.splice(i, 1);
 
-                    PlayerStats.xp += 30;
+                    PlayerStats.updateXP(30);
                     this.emit("xpUpdated");
                 }
             }

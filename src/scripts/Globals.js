@@ -18,5 +18,20 @@ export const gameSettings = {
 export const PlayerStats = {
     level : 1,
     xp : 0,
-    xpMax : 100
+    xpMax : 204.0816327,
+    x : 0.07,
+    y : 2,
+    updateXP(value)
+    {
+        this.xp += value;
+
+        if(this.xp > this.xpMax)
+        {
+            const remainingXp = this.xp - this.xpMax;
+            this.level++;
+            this.xpMax = Math.pow((this.level / this.x), this.y);
+
+            this.xp = remainingXp;
+        }
+    }
 };

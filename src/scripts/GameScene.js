@@ -25,11 +25,11 @@ export class GameScene
 
 
         
-        this.createWorld(1);
+        this.createWorld(3);
         this.createHeroContainer();
         
         this.createEntities(10);
-        this.createCollectibles(2);
+        this.createCollectibles(50);
 
         console.log(Globals.isMobile);
         if(Globals.isMobile)
@@ -73,7 +73,7 @@ export class GameScene
                 for (let i = filtered.length - 1; i >= 0; i--) {
                     const element = filtered[i];
                     
-                    PlayerStats.xp += element.xpPoint;
+                    PlayerStats.updateXP(element.xpPoint);
                     
                     this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
                     Globals.world.removeBody(element.body);
@@ -90,7 +90,7 @@ export class GameScene
                 for (let i = filtered.length - 1; i >= 0; i--) {
                     const element = filtered[i];
                     
-                    PlayerStats.xp += element.xpPoint;
+                    PlayerStats.updateXP(element.xpPoint);
                     
                     this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
                     Globals.world.removeBody(element.body);

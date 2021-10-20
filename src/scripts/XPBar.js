@@ -86,7 +86,7 @@ export class XPBar extends PIXI.Container
                 this.frontBar.beginFill(0x990000);
                 this.frontBar.drawRect(-this.barWidth/2, -this.barHeight, this.barWidth * obj.x, this.barHeight);
                 this.frontBar.endFill();
-                
+                this.levelText.text = PlayerStats.level;
             })
             .start();
     }
