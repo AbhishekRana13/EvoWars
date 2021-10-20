@@ -10,6 +10,7 @@ import { clamp, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagni
 import * as P2 from './p2';
 import { DebugCircle } from './DebugCircle';
 import { DebugText } from './DebugText';
+import { XPBar } from './XPBar';
 
 export class GameScene
 {
@@ -25,7 +26,7 @@ export class GameScene
         
         this.createWorld(3);
         this.createHeroContainer();
-
+        
         this.createEntities(10);
 
         console.log(Globals.isMobile);
@@ -47,7 +48,7 @@ export class GameScene
         this.worldBounds.bottom = appConfig.halfHeight + this.backgroundContainer.height/2 - this.heroContainer.globalHeight;
         //this.createTestBlock();
 
-        
+        this.createHeroXPBar();
     }
 
 
@@ -117,6 +118,14 @@ export class GameScene
         this.container.addChild(this.heroContainer.bodyVisual);
         this.container.addChild(this.heroContainer.sBodyVisual);
 
+    }
+
+    createHeroXPBar()
+    {
+        this.xpBar = new XPBar();
+        this.xpBar.x = appConfig.halfWidth;
+        this.xpBar.y = appConfig.height * 0.95;
+        this.container.addChild(this.xpBar);
     }
 
     createEntities(noOfEntities)

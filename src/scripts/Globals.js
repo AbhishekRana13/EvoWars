@@ -7,11 +7,14 @@ export const Globals = {
     get isMobile() {
         // return true;
         return PIXI.utils.isMobile.any;
-    }
-    
+    },
 };
 
 export const gameSettings = {
     speed : 4,
     boostedSpeed : 8
+};
+
+export const PlayerStats = {
+    level : 1
 };
