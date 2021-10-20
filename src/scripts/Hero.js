@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { appConfig, gameConfig } from './appConfig';
-import { Globals } from './Globals';
+import { Globals, PlayerStats } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { DebugCircle } from './DebugCircle';
@@ -75,7 +75,7 @@ export class Hero extends PIXI.Container
         
         this.addChild(this.sword);
 
-       this.debugSword();
+    
 
        this.createTriggerCenter();
        
@@ -118,16 +118,7 @@ export class Hero extends PIXI.Container
         this.addChild(this.triggerCenter);
     }
 
-    debugSword()
-    {
-        const graphic = new PIXI.Graphics();
-        graphic.beginFill(0x00ff00, 0.5);
   
-        graphic.drawRect(this.sword.x - this.sword.width/2, this.sword.y - this.sword.height, this.sword.width  , this.sword.height);
-        graphic.endFill();
-        graphic.angle = this.sword.angle;
-        this.addChild(graphic);
-    }
 
 
     sBodyVisualization(shape)
@@ -175,33 +166,8 @@ export class Hero extends PIXI.Container
 
     get getMouseDirection()
     {   
-        this.sBody.position = [fetchGlobalPosition(this.triggerCenter).x, fetchGlobalPosition(this.triggerCenter).y];
 
-
-        this.sBodyVisual.x = this.sBody.position[0];
-        this.sBodyVisual.y = this.sBody.position[1];
-        this.sBodyVisual.rotation = this.sBody.angle;
-
-        //this.sword.x = this.sBody.position[0] - this.x;
-       // this.sword.y = this.sBody.position[1] - this.y;
-     //   this.sword.rotation = this.sBody.angle;
-     // return null;
-
-        if(this.checkHit)
-        {
-            for (let i = Globals.entities.length-1; i >= 0; i--) {
-                const entity = Globals.entities[i];
-                
-                if(this.sBody.overlaps(entity.body))
-                {
-                    console.log("OVERLAPED");
-                    Globals.world.removeBody(entity.body);
-                    
-                    entity.destroy();
-                    Globals.entities.splice(i, 1);
-                }
-            }
-        }
+        
         
         if(this.isSwinging) return null;
 
@@ -215,9 +181,45 @@ export class Hero extends PIXI.Container
         return (getMagnitude(direction) > widthToCompare) ? normalize(direction) : null;
     }
 
-    
+    CheckEnemyHit()
+    {
+        if(this.checkHit)
+        {
+            for (let i = Globals.entities.length-1; i >= 0; i--) {
+                const entity = Globals.entities[i];
+                
+                if(this.sBody.overlaps(entity.body))
+                {
+                    console.log("OVERLAPED");
+                    Globals.world.removeBody(entity.body);
+                    
+                    entity.destroy();
+                    Globals.entities.splice(i, 1);
 
+                    PlayerStats.xp += 30;
+                    this.emit("xpUpdated");
+                }
+            }
+        }
+    }
+    
     update(dt)
+    {
+
+        this.sBody.position = [fetchGlobalPosition(this.triggerCenter).x, fetchGlobalPosition(this.triggerCenter).y];
+
+
+        this.sBodyVisual.x = this.sBody.position[0];
+        this.sBodyVisual.y = this.sBody.position[1];
+        this.sBodyVisual.rotation = this.sBody.angle;
+
+
+        this.CheckEnemyHit();
+
+        this.updateMovement(dt);
+    }
+
+    updateMovement(dt)
     {
         this.x = this.body.position[0];
         this.y = this.body.position[1];

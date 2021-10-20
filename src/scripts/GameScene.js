@@ -4,13 +4,14 @@ import * as PIXI from 'pixi.js';
 import { appConfig } from './appConfig';
 import { Background } from './Background';
 import { Entity } from './Entity';
-import { gameSettings, Globals } from './Globals';
+import { gameSettings, Globals, PlayerStats } from './Globals';
 import { Hero } from './Hero';
 import { clamp, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
 import * as P2 from './p2';
 import { DebugCircle } from './DebugCircle';
 import { DebugText } from './DebugText';
 import { XPBar } from './XPBar';
+import { CollectibleManager } from './CollectibleManager';
 
 export class GameScene
 {
@@ -24,10 +25,11 @@ export class GameScene
 
 
         
-        this.createWorld(3);
+        this.createWorld(1);
         this.createHeroContainer();
         
         this.createEntities(10);
+        this.createCollectibles(2);
 
         console.log(Globals.isMobile);
         if(Globals.isMobile)
@@ -46,33 +48,14 @@ export class GameScene
 
         this.worldBounds.top = appConfig.halfHeight - this.backgroundContainer.height/2 + this.heroContainer.globalHeight;
         this.worldBounds.bottom = appConfig.halfHeight + this.backgroundContainer.height/2 - this.heroContainer.globalHeight;
-        //this.createTestBlock();
+
 
         this.createHeroXPBar();
-    }
-
-
-    createTestBlock()
-    {
-        const boxShape = new P2.Box({ width: 200, height: 100 });
-       // boxShape.sensor = true;
-        this.boxBody = new P2.Body({
-            //type : P2.Body.STATIC,
-                mass : 0,
-                position:[appConfig.halfWidth,appConfig.halfHeight + 200],
-                angle : 30
-            });
-        this.boxBody.addShape(boxShape);
         
-        this.world.addBody(this.boxBody);
-
-        this.graphicBox = new PIXI.Graphics();
-        this.graphicBox.beginFill(0xff0000);
-        this.graphicBox.drawRect(-boxShape.width/2, -boxShape.height/2, boxShape.width, boxShape.height);
-
-            // Add the box to our container
-        this.container.addChild(this.graphicBox);
     }
+
+
+
    
     createWorld(sizeMultiplier)
     {
@@ -82,12 +65,41 @@ export class GameScene
         });
 
         Globals.world.on("beginContact", (evt) => {
-            if(evt.bodyA == this.heroContainer.body || evt.bodyB == this.heroContainer.body)
+            
+            if( (evt.bodyA == this.heroContainer.body && this.collectibleManager.collectibles.filter(item => item.body == evt.bodyB).length > 0))
             {
-                console.log("Hero collided ");
+                const filtered = this.collectibleManager.collectibles.filter(item => item.body == evt.bodyB)
+
+                for (let i = filtered.length - 1; i >= 0; i--) {
+                    const element = filtered[i];
+                    
+                    PlayerStats.xp += element.xpPoint;
+                    
+                    this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
+                    Globals.world.removeBody(element.body);
+                    element.destroy();
+                    
+                    this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+                }
+
+            } else if ( (evt.bodyB == this.heroContainer.body && this.collectibleManager.collectibles.filter(item => item.body == evt.bodyA).length > 0))
+            {
+                const filtered = this.collectibleManager.collectibles.filter(item => item.body == evt.bodyA);
+
+                
+                for (let i = filtered.length - 1; i >= 0; i--) {
+                    const element = filtered[i];
+                    
+                    PlayerStats.xp += element.xpPoint;
+                    
+                    this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
+                    Globals.world.removeBody(element.body);
+                    element.destroy();
+                    
+                    this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+                }
             }
-            //console.log(evt.bodyA);
-           // console.log(evt.bodyB);
+            
         }, this);
 
         this.backgroundContainer = new PIXI.Container();
@@ -118,6 +130,10 @@ export class GameScene
         this.container.addChild(this.heroContainer.bodyVisual);
         this.container.addChild(this.heroContainer.sBodyVisual);
 
+        this.heroContainer.on("xpUpdated", () => {
+            this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+        }, this);
+
     }
 
     createHeroXPBar()
@@ -142,6 +158,13 @@ export class GameScene
         }
     }
 
+    createCollectibles(noOfCollectibles)
+    {
+        this.collectibleManager = new CollectibleManager(this.backgroundContainer, noOfCollectibles);
+
+        
+    }
+
 
     update(dt)
     {
@@ -151,6 +174,8 @@ export class GameScene
         // this.graphicBox.x = this.boxBody.position[0];
         // this.graphicBox.y = this.boxBody.position[1];
         // this.graphicBox.rotation = this.boxBody.angle;
+        
+        
 
         if(Globals.isMobile)
             this.updateWithAnalog(dt);
@@ -165,6 +190,8 @@ export class GameScene
         Globals.entities.forEach(entity => {
             entity.update(dt);
         });
+
+        this.collectibleManager.update(dt);
     }
 
     updateWithMouse(dt)

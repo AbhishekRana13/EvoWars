@@ -16,5 +16,7 @@ export const gameSettings = {
 };
 
 export const PlayerStats = {
-    level : 1
+    level : 1,
+    xp : 0,
+    xpMax : 100
 };
