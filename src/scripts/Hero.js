@@ -20,6 +20,17 @@ export class Hero extends PIXI.Container
 
 
         this.checkHit = false;
+
+        
+        //console.log(this.body.shapes[0]);
+    }
+
+    scaleUP()
+    {
+        this.scale.set(this.scale.x * 1.2);
+        this.body.shapes[0].radius *= 1.2;
+        this.sBody.shapes[0].radius *= 1.2;
+
     }
 
     createHeroVisual()
@@ -37,18 +48,18 @@ export class Hero extends PIXI.Container
             fixedRotation : true
         });
 
-        const circleShape = new P2.Circle({
+        this.circleShape = new P2.Circle({
             radius : this.globalWidth/2,
            sensor : true
         });
 
-        this.body.addShape(circleShape);
+        this.body.addShape(this.circleShape);
         
         world.addBody(this.body);
 
-        this.addBodyVisualisation(circleShape);
+        this.addBodyVisualisation(this.circleShape);
 
-        console.log(circleShape);
+        console.log(this.circleShape);
     }
 
     addBodyVisualisation(circleShape)
@@ -152,6 +163,8 @@ export class Hero extends PIXI.Container
             .start();
     }
 
+    
+
     get globalWidth()
     {
         return this.visual.width * this.scale.x;
@@ -212,7 +225,11 @@ export class Hero extends PIXI.Container
         this.sBodyVisual.x = this.sBody.position[0];
         this.sBodyVisual.y = this.sBody.position[1];
         this.sBodyVisual.rotation = this.sBody.angle;
-
+        this.sBodyVisual.clear();
+        this.sBodyVisual.beginFill(0x00ffff, 0.3);
+        
+        this.sBodyVisual.drawCircle(0, 0, this.sBody.shapes[0].radius);
+        this.sBodyVisual.endFill();
 
         this.CheckEnemyHit();
 
@@ -228,6 +245,12 @@ export class Hero extends PIXI.Container
         
         this.bodyVisual.x = this.body.position[0];
         this.bodyVisual.y = this.body.position[1];
+        
+        this.bodyVisual.clear();
+        this.bodyVisual.beginFill(0x00ff00, 0.3);
+        
+        this.bodyVisual.drawCircle(0, 0, this.body.shapes[0].radius);
+        this.bodyVisual.endFill();
     }
 
     

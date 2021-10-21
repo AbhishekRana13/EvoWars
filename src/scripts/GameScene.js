@@ -31,6 +31,12 @@ export class GameScene
         this.createEntities(10);
         this.createCollectibles(50);
 
+
+        setInterval(() => {
+            this.createEntities(10);
+        },
+        10000
+        );
         console.log(Globals.isMobile);
         if(Globals.isMobile)
         {
@@ -133,7 +139,11 @@ export class GameScene
         this.heroContainer.on("xpUpdated", () => {
             this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
         }, this);
-
+        
+        PlayerStats.onLevelUpdate = () => {
+            this.heroContainer.scaleUP();
+            
+        };
     }
 
     createHeroXPBar()
@@ -146,7 +156,8 @@ export class GameScene
 
     createEntities(noOfEntities)
     {
-        Globals.entities = [];
+        if(Globals.entities == undefined)
+            Globals.entities = [];
 
         for (let i = 0; i < noOfEntities; i++) {
             const entity = new Entity(this.backgroundContainer, Globals.world);

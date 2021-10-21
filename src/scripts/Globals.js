@@ -32,6 +32,10 @@ export const PlayerStats = {
             this.xpMax = Math.pow((this.level / this.x), this.y);
 
             this.xp = remainingXp;
+
+            if(this.onLevelUpdate != null)
+                this.onLevelUpdate();
         }
-    }
+    },
+    onLevelUpdate : null
 };
