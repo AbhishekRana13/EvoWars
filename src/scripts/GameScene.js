@@ -12,6 +12,7 @@ import { DebugCircle } from './DebugCircle';
 import { DebugText } from './DebugText';
 import { XPBar } from './XPBar';
 import { CollectibleManager } from './CollectibleManager';
+import { Label } from './LabelScore';
 
 export class GameScene
 {
@@ -33,7 +34,8 @@ export class GameScene
 
 
         setInterval(() => {
-            this.createEntities(10);
+            if(Globals.entities.length < 30)
+                this.createEntities(10);
         },
         10000
         );
@@ -58,6 +60,12 @@ export class GameScene
 
         this.createHeroXPBar();
         
+
+        //
+        this.counterText = new Label(window.innerWidth, 0, 0, "Enemies Counter : 0", 34, 0x000000);
+        this.counterText.anchor.set(1, 0);
+        this.counterText.x -= window.innerWidth * 0.05;
+        this.container.addChild(this.counterText);
     }
 
 
@@ -133,8 +141,8 @@ export class GameScene
         
         this.container.addChild(this.heroContainer);
 
-        this.container.addChild(this.heroContainer.bodyVisual);
-        this.container.addChild(this.heroContainer.sBodyVisual);
+      //  this.container.addChild(this.heroContainer.bodyVisual);
+        //this.container.addChild(this.heroContainer.sBodyVisual);
 
         this.heroContainer.on("xpUpdated", () => {
             this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
@@ -161,7 +169,7 @@ export class GameScene
 
         for (let i = 0; i < noOfEntities; i++) {
             const entity = new Entity(this.backgroundContainer, Globals.world);
-            this.container.addChild(entity.bodyVisual);
+            //this.container.addChild(entity.bodyVisual);
             Globals.entities.push(entity);
 
 
@@ -203,6 +211,10 @@ export class GameScene
         });
 
         this.collectibleManager.update(dt);
+
+
+
+        this.counterText.text = "Enemies Counter : "+ ((Globals.entities == undefined) ? 0 : Globals.entities.length);
     }
 
     updateWithMouse(dt)

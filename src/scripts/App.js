@@ -12,10 +12,14 @@ export class App {
         // create canvas
         this.app = new PIXI.Application({width : window.innerWidth, height : window.innerHeight});
 
+  
+
         document.body.appendChild(this.app.view);
         appConfig.width = this.app.screen.width;
         appConfig.height = this.app.screen.height;
 
+        document.body.appendChild( Globals.fpsStats.dom );
+        document.body.appendChild( Globals.stats.dom );
 
         this.app.view.oncontextmenu = (e) => {
             e.preventDefault();

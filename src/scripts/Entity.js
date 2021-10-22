@@ -58,7 +58,7 @@ export class Entity extends PIXI.Container
         
         world.addBody(this.body);
 
-        this.addBodyVisualisation(circleShape);
+        //this.addBodyVisualisation(circleShape);
 
        // console.log(circleShape);
 
@@ -67,6 +67,7 @@ export class Entity extends PIXI.Container
 
     addBodyVisualisation(circleShape)
     {
+        
         this.bodyVisual = new PIXI.Graphics();
         this.bodyVisual.beginFill(0xff0000, 0.3);
         
@@ -120,6 +121,7 @@ export class Entity extends PIXI.Container
 
     updateBodyVisual(dt)
     {
+        if(this.bodyVisual == undefined || this.bodyVisual == null) return;
         this.bodyVisual.x = this.body.position[0];
         this.bodyVisual.y = this.body.position[1];
     }

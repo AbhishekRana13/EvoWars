@@ -33,6 +33,15 @@ export class SceneManager {
         if (this.scene && this.scene.update) {
             this.scene.update(dt);
         }
+
+        Globals.stats.update();
+        Globals.fpsStats.update();
+
+        // Globals.stats.begin();
+
+        // // monitored code goes here
+
+        // Globals.stats.end();
     }
 
     recievedMessage(msgType, msgParams)

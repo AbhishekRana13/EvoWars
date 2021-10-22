@@ -108,7 +108,7 @@ export class Hero extends PIXI.Container
         world.addBody(this.sBody);
         
 
-        this.sBodyVisualization(circleShape);
+        //this.sBodyVisualization(circleShape);
 
        
     }
@@ -221,15 +221,19 @@ export class Hero extends PIXI.Container
 
         this.sBody.position = [fetchGlobalPosition(this.triggerCenter).x, fetchGlobalPosition(this.triggerCenter).y];
 
+        if(this.sBodyVisual)
+        {
+            this.sBodyVisual.x = this.sBody.position[0];
+            this.sBodyVisual.y = this.sBody.position[1];
+            this.sBodyVisual.rotation = this.sBody.angle;
+            this.sBodyVisual.clear();
+            this.sBodyVisual.beginFill(0x00ffff, 0.3);
+            
+            this.sBodyVisual.drawCircle(0, 0, this.sBody.shapes[0].radius);
+            this.sBodyVisual.endFill();
+        }
 
-        this.sBodyVisual.x = this.sBody.position[0];
-        this.sBodyVisual.y = this.sBody.position[1];
-        this.sBodyVisual.rotation = this.sBody.angle;
-        this.sBodyVisual.clear();
-        this.sBodyVisual.beginFill(0x00ffff, 0.3);
-        
-        this.sBodyVisual.drawCircle(0, 0, this.sBody.shapes[0].radius);
-        this.sBodyVisual.endFill();
+
 
         this.CheckEnemyHit();
 
