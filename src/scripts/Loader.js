@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { fontData, LoaderConfig, LoaderSoundConfig, preloaderConfig } from "./LoaderConfig";
 import { Globals } from "./Globals";
-import { appConfig, gameConfig } from './appConfig';
+import { config } from './appConfig';
 import {DebugText} from './DebugText';
 import {Background} from './Background';
 import {Howl, Howler} from 'howler';
@@ -12,60 +12,74 @@ export class Loader {
     constructor(loader, container) {
         this.loader = loader;
         
-        
-        
-        this.background = new Background(PIXI.Texture.from('../src/sprites/Prototype/Orange/texture_08.png'));
-
-        container.addChild(this.background);
-
-        this.loaderBarContainer = new PIXI.Container();
-
-        this.logo = PIXI.Sprite.from('../src/sprites/monkey.png');
-        
-        this.logo.anchor.set(0.5, 1);
-        this.logo.position = new PIXI.Point(0, 0);
-        this.loaderBarContainer.addChild(this.logo);
-
-        this.progressBox = new PIXI.Graphics()
-        this.progressBar = new PIXI.Graphics();
-
-        this.progressBox.beginFill(0x3c3c3c, 0.8);
-        this.progressBox.drawRect(-240, 0, 480, 20);
-        this.progressBox.endFill();
-
-        this.progressText = new DebugText("0%", 0, 0, '#FFF');
-        this.progressText.anchor.set(1, 0);
-        this.progressText.position = new PIXI.Point( 230, this.progressBox.height);
-        
-        this.loaderBarContainer.addChild(this.progressBox);
-        this.loaderBarContainer.addChild(this.progressBar);
-        this.loaderBarContainer.addChild(this.progressText);
-
-        this.loaderBarContainer.scale.set(gameConfig.heightRatio);
-        
-        this.loaderBarContainer.x = appConfig.width/2;
-        this.loaderBarContainer.y = appConfig.height/2;
-
-        container.addChild(this.loaderBarContainer);
-        this.loader.onProgress.add((e) => {
-           let value = e.progress / 100;
-           this.progressBar.clear();
-            this.progressBar.beginFill(0xffffff, 1);
-            this.progressBar.drawRect(-235, 5, 470 * value, 10);
-            this.progressText.text = `${Math.ceil(e.progress)}%`;
-            this.progressBar.endFill();
-        });
-
-        this.loader.onComplete.add((e) => {
-            this.progressBar.clear();
-            this.progressBar.beginFill(0xffffff, 1);
-            this.progressBar.drawRect(-235, 5, 470 , 10);
-            this.progressBar.endFill();
-        });
-        
+        this.createLoadingPage(container);
         this.resources = LoaderConfig;
 
        
+    }
+
+    createLoadingPage(container)
+    {
+        //background
+        this.background = new PIXI.Sprite(PIXI.Texture.from('/src/sprites/Prototype/Light/texture_05.png'));
+        this.background.width = window.innerWidth;
+        this.background.height = window.innerHeight;
+        container.addChild(this.background);
+
+        //loaderbar
+        this.loaderBarContainer = new PIXI.Container();
+
+        const logo = PIXI.Sprite.from('./src/sprites/monkey.png');
+        
+        logo.anchor.set(0.5, 1);
+        logo.x = config.logicalWidth/2;
+        logo.y = config.logicalHeight/2;
+
+        const progressBox = new PIXI.Graphics()
+        const progressBar = new PIXI.Graphics();
+
+        const boxData = {
+            width : (config.logicalWidth * 0.6),
+            height : 20,
+            x : config.logicalWidth/2,
+            y : config.logicalHeight/2
+        };
+        
+
+        progressBox.beginFill(0x3c3c3c, 0.8);
+        progressBox.drawRect(boxData.x - boxData.width/2, boxData.y, boxData.width, boxData.height);
+        progressBox.endFill();
+
+        const progressText = new DebugText("0%", 0, 0, '#FFF');
+        progressText.anchor.set(1, 0);
+        progressText.position = new PIXI.Point(boxData.x + boxData.width/2, boxData.y + boxData.height);
+        
+        this.loaderBarContainer.addChild(logo);
+        this.loaderBarContainer.addChild(progressBox);
+        this.loaderBarContainer.addChild(progressBar);
+        this.loaderBarContainer.addChild(progressText);
+
+        this.loaderBarContainer.scale.set(config.minScaleFactor);
+        
+        this.loaderBarContainer.x = config.minLeftX;
+        this.loaderBarContainer.y = config.minTopY;
+
+        container.addChild(this.loaderBarContainer);
+        this.loader.onProgress.add((e) => {
+            let value = e.progress / 100;
+            progressBar.clear();
+            progressBar.beginFill(0xffffff, 1);
+            progressBar.drawRect(boxData.x - (boxData.width * 0.49), boxData.y + boxData.height/4, boxData.width * 0.98 * value, boxData.height/2);
+            progressText.text = `${Math.ceil(e.progress)}%`;
+            progressBar.endFill();
+        });
+
+        this.loader.onComplete.add((e) => {
+            progressBar.clear();
+            progressBar.beginFill(0xffffff, 1);
+            progressBar.drawRect(boxData.x - (boxData.width * 0.49), boxData.y + boxData.height/4, boxData.width * 0.98, boxData.height/2);
+            progressBar.endFill();
+        });
     }
 
     

@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
-import { appConfig, gameConfig } from './appConfig';
 import { clamp } from './Utilities';
 import * as TWEEN from '@tweenjs/tween.js';
 import { Label } from './LabelScore';
 import { PlayerStats } from './Globals';
+import { config } from './appConfig';
 
 export class XPBar extends PIXI.Container
 {
@@ -12,8 +12,8 @@ export class XPBar extends PIXI.Container
         super();
 
 
-        this.barWidth = appConfig.width * 0.8;
-        this.barHeight = 100 * gameConfig.heightRatio;
+        this.barWidth = config.logicalWidth * 0.8;
+        this.barHeight = config.logicalHeight * 0.07;
         this.lastProgress = {x : 0};
         this.timeToFillBar = 1000;
 

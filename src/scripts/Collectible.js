@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { gameConfig } from './appConfig';
+import { config } from './appConfig';
 import { Globals } from './Globals';
 import * as P2 from "./p2";
 export class Collectible extends PIXI.Container
@@ -11,29 +11,37 @@ export class Collectible extends PIXI.Container
         super();
         parent.addChild(this);
 
-        
+    
 
-        const range = {min : 20 * gameConfig.widthRatio, max : 50 * gameConfig.widthRatio};
+        const range = {min : config.logicalWidth * 0.01, max : config.logicalWidth * 0.02};
         
-        const radius = Math.floor((Math.random()* range.max) + range.min);
+        this.radius = Math.floor((Math.random()* range.max) + range.min);
 
-        this.xpPoint = 20 * (radius / (30 * gameConfig.widthRatio));
+        this.xpPoint = 20 * (this.radius / (config.logicalWidth * 0.01 * config.scaleFactor));
         const randomColor = Math.floor(Math.random()*16777215);//.toString(16);
         
         this.offsetX = x;
         this.offsetY = y;
         
+        let xPos = (x + parent.x) * config.scaleFactor;
+        xPos += config.leftX;
+
+        let yPos = (y + parent.y) * config.scaleFactor;
+        yPos += config.topY;
         
+
+
+
         this.body = new P2.Body({
             mass : 1,
-            position : [x + parent.x , y + parent.y],
+            position : [xPos, yPos],
             fixedRotation : true
         });
 
     
 
         const circleShape = new P2.Circle({
-            radius : radius * parent.scale.x,
+            radius : this.radius * parent.scale.x * config.scaleFactor,
             sensor : true
         });
 
@@ -46,7 +54,7 @@ export class Collectible extends PIXI.Container
         
         const visualGraphic = new PIXI.Graphics();
         visualGraphic.beginFill(randomColor)
-        visualGraphic.drawCircle(0, 0, radius);
+        visualGraphic.drawCircle(0, 0, this.radius);
         visualGraphic.endFill();
        
         this.addChild(visualGraphic);
@@ -55,12 +63,25 @@ export class Collectible extends PIXI.Container
        // this.y = y;
     }
 
+    sizeReset()
+    {
+        this.body.shapes[0].radius = this.radius * this.parent.scale.x * config.scaleFactor;
+    }
+
 
     update(dt)
     {
         this.body.position[0] = this.parent.x + this.offsetX;
+        this.body.position[0] *= config.scaleFactor;
+        this.body.position[0] += config.leftX;
+
         this.body.position[1] = this.parent.y + this.offsetY;
-        this.x = this.body.position[0] - this.parent.x;
-        this.y = this.body.position[1] - this.parent.y;
+        this.body.position[1] *= config.scaleFactor;
+        this.body.position[1] += config.topY;
+
+        this.x = (this.body.position[0] - config.leftX) / config.scaleFactor - this.parent.x;
+        this.y = (this.body.position[1] - config.topY) / config.scaleFactor - this.parent.y;
+
+      
     }
 }

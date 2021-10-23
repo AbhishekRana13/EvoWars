@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import { Loader } from "./Loader";
 import { Globals } from "./Globals";
 import { SceneManager } from "./SceneManager";
-import { appConfig, gameConfig } from "./appConfig";
+import { CalculateScaleFactor, config} from "./appConfig";
 import { MyEmitter } from "./MyEmitter";
 import { GameScene } from "./GameScene";
 
@@ -10,16 +10,20 @@ import { GameScene } from "./GameScene";
 export class App {
     run() {
         // create canvas
+
+
+        PIXI.settings.RESOLUTION = window.devicePixelRatio || 1;
+
         this.app = new PIXI.Application({width : window.innerWidth, height : window.innerHeight});
-
-  
-
         document.body.appendChild(this.app.view);
-        appConfig.width = this.app.screen.width;
-        appConfig.height = this.app.screen.height;
-
         document.body.appendChild( Globals.fpsStats.dom );
         document.body.appendChild( Globals.stats.dom );
+
+        CalculateScaleFactor();
+
+        this.app.renderer.view.style.width = `${window.innerWidth}px`;
+		this.app.renderer.view.style.height = `${window.innerHeight}px`;
+		this.app.renderer.resize(window.innerWidth, window.innerHeight);
 
         this.app.view.oncontextmenu = (e) => {
             e.preventDefault();
@@ -27,12 +31,15 @@ export class App {
         };
 
         window.onresize = (e) => {
-            console.log(e);
+            
+            CalculateScaleFactor();
 
-            //this.app.resizeTo = window;
-            //this.app.resize();
-            // appConfig.width = this.app.screen.width;
-            // appConfig.height = this.app.screen.height;
+            this.app.renderer.view.style.width = `${window.innerWidth}px`;
+            this.app.renderer.view.style.height = `${window.innerHeight}px`;
+            this.app.renderer.resize(window.innerWidth, window.innerHeight);
+
+            Globals.scene.resize();
+
         }
 
         this.app.view.onpointerdown = (e) => {

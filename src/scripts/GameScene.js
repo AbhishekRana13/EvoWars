@@ -1,7 +1,7 @@
 
 
 import * as PIXI from 'pixi.js';
-import { appConfig } from './appConfig';
+import {config } from './appConfig';
 import { Background } from './Background';
 import { Entity } from './Entity';
 import { gameSettings, Globals, PlayerStats } from './Globals';
@@ -18,19 +18,58 @@ export class GameScene
 {
     constructor()
     {
-
+        this.sceneContainer = new PIXI.Container();
 
         this.container = new PIXI.Container();
+        this.uiContainer = new PIXI.Container();
+
         this.currentSpeed = gameSettings.speed;
-        
 
+        this.container.scale.set(config.scaleFactor);
+        this.container.x = config.leftX;
+        this.container.y = config.topY;
 
         
+        this.uiContainer.scale.set(config.minScaleFactor);
+        this.uiContainer.x = config.minLeftX;
+        this.uiContainer.y = config.minTopY;
+       
+
+        this.fullBG = new PIXI.Graphics();
+        this.fullBG.beginFill(0x808080);
+        this.fullBG.drawRect(0, 0, window.innerWidth, window.innerHeight);
+        this.fullBG.endFill();
+
+        
+        //fullBG.
+        this.sceneContainer.addChild(this.fullBG);
+        this.sceneContainer.addChild(this.container);
+        this.sceneContainer.addChild(this.uiContainer);
+       
+
         this.createWorld(3);
+
+        
         this.createHeroContainer();
         
+
+
+        const debugBG = new PIXI.Graphics();
+        debugBG.beginFill(0x808080, 0.4);
+        debugBG.drawRect(0, 0, config.logicalWidth, config.logicalHeight);
+        debugBG.endFill();
+        
+        //this.container.addChild(debugBG);
+
+        const debugBG2 = new PIXI.Graphics();
+        debugBG2.beginFill(0x3c8c3c, 0.4);
+        debugBG2.drawRect(0, 0, config.logicalWidth, config.logicalHeight);
+        debugBG2.endFill();
+        
+       // this.uiContainer.addChild(debugBG2);
+        
         this.createEntities(10);
-        this.createCollectibles(50);
+        this.createCollectibles(20);
 
 
         setInterval(() => {
@@ -39,6 +78,7 @@ export class GameScene
         },
         10000
         );
+
         console.log(Globals.isMobile);
         if(Globals.isMobile)
         {
@@ -46,26 +86,63 @@ export class GameScene
             this.mobileDir = new PIXI.Point(0, 0);
         }
 
-        
-        
+
         this.worldBounds = {};
         
-        this.worldBounds.left = appConfig.halfWidth - this.backgroundContainer.width/2 + this.heroContainer.globalWidth;
-        this.worldBounds.right = appConfig.halfWidth + this.backgroundContainer.width/2 - this.heroContainer.globalWidth;
+        this.worldBounds.left = config.logicalWidth/2 - this.backgroundContainer.width/2 + this.heroContainer.globalWidth;
+        this.worldBounds.right = config.logicalWidth/2 + this.backgroundContainer.width/2 - this.heroContainer.globalWidth;
 
 
-        this.worldBounds.top = appConfig.halfHeight - this.backgroundContainer.height/2 + this.heroContainer.globalHeight;
-        this.worldBounds.bottom = appConfig.halfHeight + this.backgroundContainer.height/2 - this.heroContainer.globalHeight;
+        this.worldBounds.top = config.logicalHeight/2 - this.backgroundContainer.height/2 + this.heroContainer.globalHeight;
+        this.worldBounds.bottom = config.logicalHeight/2 + this.backgroundContainer.height/2 - this.heroContainer.globalHeight;
 
 
         this.createHeroXPBar();
         
 
         //
-        this.counterText = new Label(window.innerWidth, 0, 0, "Enemies Counter : 0", 34, 0x000000);
+        this.counterText = new Label(config.logicalWidth, 0, 0, "Enemies Counter : 0", 34, 0x000000);
         this.counterText.anchor.set(1, 0);
-        this.counterText.x -= window.innerWidth * 0.05;
-        this.container.addChild(this.counterText);
+        this.counterText.x -= config.logicalWidth * 0.05;
+        this.uiContainer.addChild(this.counterText);
+    }
+
+    resize()
+    {
+        
+
+        //FullBG
+        this.fullBG.clear();
+        this.fullBG.beginFill(0x808080);
+        this.fullBG.drawRect(0, 0, window.innerWidth, window.innerHeight);
+        this.fullBG.endFill();
+
+
+        this.heroContainer.sizeReset();
+        
+     
+
+     // 
+
+
+        this.container.scale.set(config.scaleFactor);
+        this.container.x = config.leftX;
+        this.container.y = config.topY;
+
+
+
+        Globals.entities.forEach(entity => {
+            entity.sizeReset();
+        });
+
+        this.collectibleManager.resize();
+        
+        this.uiContainer.scale.set(config.minScaleFactor);
+        this.uiContainer.x = config.minLeftX;
+        this.uiContainer.y = config.minTopY;
+
+
+
     }
 
 
@@ -118,11 +195,11 @@ export class GameScene
 
         this.backgroundContainer = new PIXI.Container();
         
-        const background = new Background(Globals.resources.background.texture, sizeMultiplier);
+        const background = new Background(Globals.resources.background.texture,config.logicalWidth, config.logicalHeight, sizeMultiplier);
         background.anchor.set(0.5);
 
-        this.backgroundContainer.x = appConfig.halfWidth;
-        this.backgroundContainer.y = appConfig.halfHeight;
+        this.backgroundContainer.x = config.logicalWidth/2;
+        this.backgroundContainer.y = config.logicalHeight/2;
 
         this.backgroundContainer.addChild(background);
         
@@ -141,8 +218,8 @@ export class GameScene
         
         this.container.addChild(this.heroContainer);
 
-      //  this.container.addChild(this.heroContainer.bodyVisual);
-        //this.container.addChild(this.heroContainer.sBodyVisual);
+        //this.sceneContainer.addChild(this.heroContainer.bodyVisual);
+       // this.sceneContainer.addChild(this.heroContainer.sBodyVisual);
 
         this.heroContainer.on("xpUpdated", () => {
             this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
@@ -157,9 +234,9 @@ export class GameScene
     createHeroXPBar()
     {
         this.xpBar = new XPBar();
-        this.xpBar.x = appConfig.halfWidth;
-        this.xpBar.y = appConfig.height * 0.95;
-        this.container.addChild(this.xpBar);
+        this.xpBar.x = config.logicalWidth/2;
+        this.xpBar.y = config.logicalHeight - this.xpBar.height/2;
+        this.uiContainer.addChild(this.xpBar);
     }
 
     createEntities(noOfEntities)
@@ -169,7 +246,7 @@ export class GameScene
 
         for (let i = 0; i < noOfEntities; i++) {
             const entity = new Entity(this.backgroundContainer, Globals.world);
-            //this.container.addChild(entity.bodyVisual);
+           // this.sceneContainer.addChild(entity.bodyVisual);
             Globals.entities.push(entity);
 
 
@@ -187,7 +264,7 @@ export class GameScene
 
     update(dt)
     {
-        
+       // return;
         Globals.world.step(dt);
 
         // this.graphicBox.x = this.boxBody.position[0];
@@ -210,15 +287,16 @@ export class GameScene
             entity.update(dt);
         });
 
-        this.collectibleManager.update(dt);
+       this.collectibleManager.update(dt);
 
 
 
-        this.counterText.text = "Enemies Counter : "+ ((Globals.entities == undefined) ? 0 : Globals.entities.length);
+       this.counterText.text = "Enemies Counter : "+ ((Globals.entities == undefined) ? 0 : Globals.entities.length);
     }
 
     updateWithMouse(dt)
     {
+        console.log(this.backgroundContainer.width);
         const dir = this.heroContainer.getMouseDirection;
         
         if(dir != null)
@@ -227,7 +305,7 @@ export class GameScene
 
             this.backgroundContainer.x -= dir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= dir.y *this.currentSpeed*dt;
-            console.log(this.backgroundContainer.width);
+           
             
 
             

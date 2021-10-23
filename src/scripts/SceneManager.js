@@ -3,7 +3,6 @@ import TWEEN from "@tweenjs/tween.js";
 import { Background } from "./Background";
 import { Globals } from "./Globals";
 import { DebugText } from "./DebugText";
-import { appConfig } from "./appConfig";
 
 export class SceneManager {
     constructor() {
@@ -13,11 +12,11 @@ export class SceneManager {
 
     start(scene) {
         if (this.scene) {
-            this.scene.container.destroy();
+            this.scene.sceneContainer.destroy();
         }
 
         this.scene = scene;
-        this.container.addChild(this.scene.container);
+        this.container.addChild(this.scene.sceneContainer);
 
 
         if( window.orientation == 90 || window.orientation == -90)
@@ -44,6 +43,13 @@ export class SceneManager {
         // Globals.stats.end();
     }
 
+    resize()
+    {
+        if (this.scene && this.scene.resize) {
+            this.scene.resize();
+        }
+    }
+
     recievedMessage(msgType, msgParams)
     {
 		if(this.scene && this.scene.recievedMessage)
@@ -55,7 +61,7 @@ export class SceneManager {
     drawImageAbove()
     {
         this.aboveBackground = new Background(Globals.resources.cover.texture,Globals.resources.cover.texture);
-        this.labelText = new DebugText("Move Back To Portrait Mode", appConfig.width/2, appConfig.height/2, "#FFF");
+        this.labelText = new DebugText("Move Back To Portrait Mode", window.innerWidth/2, window.innerHeight/2, "#FFF");
         this.container.addChild(this.aboveBackground.container);
         this.container.addChild(this.labelText);
     }

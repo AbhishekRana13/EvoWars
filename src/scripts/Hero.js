@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js'
-import { appConfig, gameConfig } from './appConfig';
+import { config } from './appConfig';
 import { Globals, PlayerStats } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
@@ -11,7 +11,9 @@ export class Hero extends PIXI.Container
     constructor(world)
     {
         super();
-        this.scale.set(gameConfig.widthRatio * 0.7);
+//        this.scale.set(gameConfig.widthRatio * 0.7);
+        this.scaleValue = 0.4;
+        this.scale.set(this.scaleValue);
         
         this.createHeroVisual();
         this.createBody(world);
@@ -27,9 +29,28 @@ export class Hero extends PIXI.Container
 
     scaleUP()
     {
-        this.scale.set(this.scale.x * 1.2);
-        this.body.shapes[0].radius *= 1.2;
-        this.sBody.shapes[0].radius *= 1.2;
+        this.scaleValue *= 1.2;
+
+        this.sizeReset(false);
+    }
+
+    sizeReset(resetPosition = true)
+    {
+        if(resetPosition)
+        {
+            let xPos = (config.logicalWidth/2) * config.scaleFactor;
+            let yPos = (config.logicalHeight/2) * config.scaleFactor;
+            xPos += config.leftX;
+            yPos += config.topY;
+    
+            this.body.position[0] = xPos;
+            this.body.position[1] = yPos;
+        }
+        
+
+        this.scale.set(this.scaleValue);
+        this.body.shapes[0].radius = this.globalWidth/2;
+        this.sBody.shapes[0].radius = this.globalWidth * 0.7;
 
     }
 
@@ -42,14 +63,21 @@ export class Hero extends PIXI.Container
 
     createBody(world)
     {
+
+        let xPos = (config.logicalWidth/2) * config.scaleFactor;
+        let yPos = (config.logicalHeight/2) * config.scaleFactor;
+
+        xPos += config.leftX;
+        yPos += config.topY;
+
         this.body = new P2.Body({
             mass : 1,//type : P2.Body.KINEMATIC,
-            position : [appConfig.halfWidth, appConfig.halfHeight],
+            position : [xPos, yPos],
             fixedRotation : true
         });
 
         this.circleShape = new P2.Circle({
-            radius : this.globalWidth/2,
+            radius : (this.globalWidth/2),
            sensor : true
         });
 
@@ -57,7 +85,7 @@ export class Hero extends PIXI.Container
         
         world.addBody(this.body);
 
-        this.addBodyVisualisation(this.circleShape);
+        //this.addBodyVisualisation(this.circleShape);
 
         console.log(this.circleShape);
     }
@@ -99,7 +127,7 @@ export class Hero extends PIXI.Container
        
 
         const circleShape = new P2.Circle({
-            radius : this.globalWidth * 0.8,
+            radius : this.globalWidth * 0.7,
             sensor : true
         });
 
@@ -108,7 +136,7 @@ export class Hero extends PIXI.Container
         world.addBody(this.sBody);
         
 
-        //this.sBodyVisualization(circleShape);
+       // this.sBodyVisualization(circleShape);
 
        
     }
@@ -167,12 +195,12 @@ export class Hero extends PIXI.Container
 
     get globalWidth()
     {
-        return this.visual.width * this.scale.x;
+        return this.visual.width * this.scale.x * config.scaleFactor;
     }
 
     get globalHeight()
     {
-        return this.visual.height * this.scale.y;
+        return this.visual.height * this.scale.y * config.scaleFactor;
     }
 
     
@@ -184,7 +212,7 @@ export class Hero extends PIXI.Container
         
         if(this.isSwinging) return null;
 
-        const position = this.position;
+        const position = fetchGlobalPosition(this);
         const mousePosition = getMousePosition();
         
         const direction = getDirectionBetween(position, mousePosition);
@@ -218,11 +246,12 @@ export class Hero extends PIXI.Container
     
     update(dt)
     {
-
         this.sBody.position = [fetchGlobalPosition(this.triggerCenter).x, fetchGlobalPosition(this.triggerCenter).y];
 
         if(this.sBodyVisual)
         {
+          
+
             this.sBodyVisual.x = this.sBody.position[0];
             this.sBodyVisual.y = this.sBody.position[1];
             this.sBodyVisual.rotation = this.sBody.angle;
@@ -242,19 +271,24 @@ export class Hero extends PIXI.Container
 
     updateMovement(dt)
     {
-        this.x = this.body.position[0];
-        this.y = this.body.position[1];
+        this.x = (this.body.position[0]- config.leftX) / config.scaleFactor;
+        this.y = (this.body.position[1]- config.topY) / config.scaleFactor;
 
         this.rotation = this.body.angle;
         
-        this.bodyVisual.x = this.body.position[0];
-        this.bodyVisual.y = this.body.position[1];
-        
-        this.bodyVisual.clear();
-        this.bodyVisual.beginFill(0x00ff00, 0.3);
-        
-        this.bodyVisual.drawCircle(0, 0, this.body.shapes[0].radius);
-        this.bodyVisual.endFill();
+        if(this.bodyVisual)
+        {
+            this.bodyVisual.y = this.body.position[1];
+            this.bodyVisual.x = this.body.position[0];
+            
+            this.bodyVisual.clear();
+            this.bodyVisual.beginFill(0x00ff00, 0.3);
+            
+            this.bodyVisual.drawCircle(0, 0, this.body.shapes[0].radius);
+            this.bodyVisual.endFill();
+        }
+
+
     }
 
     

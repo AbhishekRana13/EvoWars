@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import { gameConfig } from "./appConfig";
 import { Collectible } from "./Collectible";
 import { clamp } from "./Utilities";
 
@@ -15,7 +14,7 @@ export class CollectibleManager
             const randomX = Math.floor((Math.random()* backgroundContainer.width) - backgroundContainer.width/2);
             const randomY = Math.floor((Math.random()* backgroundContainer.height) - backgroundContainer.height/2);
 
-            const offset = 100 * gameConfig.widthRatio;
+            const offset = 100;
             randomX = clamp(randomX, -backgroundContainer.width/2 + offset, backgroundContainer.width/2 - offset);
             randomY = clamp(randomY, -backgroundContainer.height/2 + offset, backgroundContainer.height/2 - offset);
             
@@ -35,6 +34,13 @@ export class CollectibleManager
     {
         this.collectibles.reverse().forEach(collectible => {
             collectible.update(dt);
+        });
+    }
+
+    resize()
+    {
+        this.collectibles.reverse().forEach(collectible => {
+            collectible.sizeReset();
         });
     }
 }

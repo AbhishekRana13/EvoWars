@@ -1,15 +1,15 @@
 import * as PIXI from "pixi.js";
-import { appConfig, gameConfig } from "./appConfig";
+import {config } from "./appConfig";
 import { Globals } from "./Globals";
 
 export class Background extends PIXI.TilingSprite {
-    constructor(topImage, scaleSize = null) {
+    constructor(topImage,width = config.logicalWidth, height= config.logicalHeight, scaleSize = null) {
 
         super(topImage);
 
 
-        this.width = appConfig.width;
-        this.height = appConfig.height;
+        this.width = width;
+        this.height = height;
 
         if(scaleSize != null)
         {

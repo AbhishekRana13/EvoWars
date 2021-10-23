@@ -1,25 +1,61 @@
-export const appConfig = {
-    innerHeight: window.innerHeight,
-    innerWidth : window.innerHeight * 0.5625,
-    width : 0,
-    height : 0,
-    get halfWidth(){
-        return this.width/2; 
-    },
-    get halfHeight(){
-        return this.height/2;
-    } ,
-};
 
-export const gameConfig = {
-    maxWidth : 1024,
-    maxHeight : 1920,
-    currentResolutionRatio : appConfig.height/1920,
-    get heightRatio() {
-        return appConfig.innerHeight / 1920;
-    },
-    get widthRatio() {
-        return appConfig.innerWidth / 1080;
-    },
-};
 
+
+export const config = {
+	logicalWidth: 1920,
+	logicalHeight: 1080,
+	scaleFactor: 1,
+    minScaleFactor : 1,
+	get topY()
+	{
+		return (window.innerHeight - (this.logicalHeight * this.scaleFactor))/2;
+	},
+	get bottomY()
+	{
+		return window.innerHeight - this.topX;
+	},
+	get leftX()
+	{
+		return (window.innerWidth - (this.logicalWidth * this.scaleFactor))/2;
+	},
+	get rightX()
+	{
+		return window.innerWidth - this.leftX;
+	},
+    get minTopY()
+	{
+		return (window.innerHeight - (this.logicalHeight * this.minScaleFactor))/2;
+	},
+	get minBottomY()
+	{
+		return window.innerHeight - this.topX;
+	},
+	get minLeftX()
+	{
+		return (window.innerWidth - (this.logicalWidth * this.minScaleFactor))/2;
+	},
+	get minRightX()
+	{
+		return window.innerWidth - this.leftX;
+	}
+}
+
+export const CalculateScaleFactor = () => {
+    const maxScaleFactor = Math.max(
+        window.innerWidth/config.logicalWidth,
+        window.innerHeight/config.logicalHeight,
+    );
+
+    const minScaleFactor = Math.min(
+        window.innerWidth/config.logicalWidth,
+        window.innerHeight/config.logicalHeight,
+    );
+
+    config.scaleFactor = maxScaleFactor;
+    config.minScaleFactor = minScaleFactor;
+
+    console.log(config.leftX, config.rightX);
+    console.log(window.innerWidth + "x" + window.innerHeight);
+    console.log(config.scaleFactor);
+    console.log(config.minScaleFactor);
+};

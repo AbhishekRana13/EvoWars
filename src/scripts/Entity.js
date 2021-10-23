@@ -1,15 +1,17 @@
 import * as PIXI from 'pixi.js';
-import { gameConfig } from './appConfig';
 import { Globals } from './Globals';
 import { clamp, getAngleBetween, getAngleInRadian } from './Utilities';
 import TWEEN from "@tweenjs/tween.js";
 import * as P2 from "./p2";
+import { config } from './appConfig';
 export class Entity extends PIXI.Container
 {
     constructor(parentContainer, world)
     {
         super();
-        this.scale.set(gameConfig.widthRatio * 0.7);
+
+        this.scaleValue = 0.4;
+        this.scale.set(this.scaleValue);
         
         this.createEntityVisual();
 
@@ -29,6 +31,17 @@ export class Entity extends PIXI.Container
         
     }
 
+    sizeReset()
+    {
+        console.log("RESET");
+        //this.scale.set(this.scaleValue);
+        
+
+        console.log(this.parent.scale.x);
+        this.body.shapes[0].radius = this.globalWidth/2;
+        
+    }
+
     createEntityVisual()
     {
         this.visual = new PIXI.Sprite(Globals.resources.entity.texture);
@@ -39,12 +52,18 @@ export class Entity extends PIXI.Container
 
     createBody(parentContainer, world)
     {
-        this.offsetX = (Math.random() * parentContainer.width) - parentContainer.width/2;
-        this.offsetY = (Math.random() * parentContainer.height) - parentContainer.height/2;
+        this.offsetX = (Math.random() * parentContainer.width) - (parentContainer.width/2);
+        this.offsetY = (Math.random() * parentContainer.height) - (parentContainer.width/2);
+        
+        let xPos = (this.offsetX + parent.x) * config.scaleFactor;
+        xPos += config.leftX;
+
+        let yPos = (this.offsetY + parent.y) * config.scaleFactor;
+        yPos += config.topY;
 
         this.body = new P2.Body({
             mass : 1,
-            position : [parentContainer.x + this.offsetX, parentContainer.y + this.offsetY],
+            position : [xPos, yPos],
             fixedRotation : true
         });
         //console.log(parentContainer.width, parentContainer.height)
@@ -58,7 +77,7 @@ export class Entity extends PIXI.Container
         
         world.addBody(this.body);
 
-        //this.addBodyVisualisation(circleShape);
+       // this.addBodyVisualisation(circleShape);
 
        // console.log(circleShape);
 
@@ -79,12 +98,12 @@ export class Entity extends PIXI.Container
 
     get globalWidth()
     {
-        return this.visual.width * this.scale.x;
+        return this.visual.width * this.scale.x * config.scaleFactor;
     }
 
     get globalHeight()
     {
-        return this.visual.height * this.scale.y;
+        return this.visual.height * this.scale.y * config.scaleFactor;
     }
 
     get globalPosition()
@@ -104,13 +123,24 @@ export class Entity extends PIXI.Container
         
         this.offsetX += this.currentDirection.x * dt * 5;
         this.offsetY += this.currentDirection.y * dt * 5;
-        this.body.position[0] = this.parent.x + this.offsetX;
-        this.body.position[1] = this.parent.y + this.offsetY;
-        this.offsetX = clamp(this.offsetX, -this.parent.width/2 + this.globalWidth, this.parent.width/2 - this.globalWidth);
-        this.offsetY = clamp(this.offsetY, -this.parent.height/2 + this.globalHeight, this.parent.height/2 - this.globalHeight);
+        const width = this.visual.width * this.scale.x;
+        const height = this.visual.height * this.scale.y;
+        this.offsetX = clamp(this.offsetX, -this.parent.width/2 + width, this.parent.width/2 - width);
+        this.offsetY = clamp(this.offsetY, -this.parent.height/2 + height, this.parent.height/2 - height);
 
-        this.x = this.body.position[0] - this.parent.x;
-        this.y = this.body.position[1] - this.parent.y;
+        this.body.position[0] = this.parent.x + this.offsetX;
+        this.body.position[0] *= config.scaleFactor;
+        this.body.position[0] += config.leftX;
+
+        this.body.position[1] = this.parent.y + this.offsetY;
+        this.body.position[1] *= config.scaleFactor;
+        this.body.position[1] += config.topY;
+
+        
+
+        this.x = ((this.body.position[0] - config.leftX) / config.scaleFactor) - this.parent.x;
+        this.y = ((this.body.position[1] - config.topY) / config.scaleFactor) - this.parent.y;
+
         this.rotation = this.body.angle;
 
       //  console.log(this.globalPosition);
@@ -122,6 +152,11 @@ export class Entity extends PIXI.Container
     updateBodyVisual(dt)
     {
         if(this.bodyVisual == undefined || this.bodyVisual == null) return;
+        
+        this.bodyVisual.clear();
+        this.bodyVisual.beginFill(0xff0000, 0.3);
+        this.bodyVisual.drawCircle(0, 0, this.body.shapes[0].radius);
+        this.bodyVisual.endFill();
         this.bodyVisual.x = this.body.position[0];
         this.bodyVisual.y = this.body.position[1];
     }
