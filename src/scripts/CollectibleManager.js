@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import { Collectible } from "./Collectible";
-import { clamp } from "./Utilities";
+import { Globals, PlayerStats } from "./Globals";
+import { clamp, fetchGlobalPosition, getDirectionBetween, getMagnitude } from "./Utilities";
 
 
 export class CollectibleManager
@@ -30,11 +31,53 @@ export class CollectibleManager
         
     }
 
-    update(dt)
+    update(hero, dt)
     {
-        this.collectibles.reverse().forEach(collectible => {
-            collectible.update(dt);
-        });
+
+        for (let i = this.collectibles.length - 1; i >= 0; i--) {
+            const collectible = this.collectibles[i];
+            if(this.checkIfCollide(collectible, hero))
+            {
+                this.collectCollectible(collectible, hero)
+            } else
+            {
+                Globals.entities.forEach(entity => {
+                    if(this.checkIfCollide(collectible, entity))
+                    {
+                        this.collectCollectible(collectible, entity)
+                    }
+                });
+            }
+        }
+    }
+
+    checkIfCollide(object1, object2)
+    {
+       
+        
+        const object1Pos = fetchGlobalPosition(object1);
+        const object2Pos = fetchGlobalPosition(object2);
+        const direction = getDirectionBetween(object2Pos, object1Pos);
+        const distanceToCompare = object1.globalRadius + object2.globalRadius;
+
+        return getMagnitude(direction) <= distanceToCompare;
+    }
+
+    collectCollectible(collectible, entity)
+    {
+           
+        this.collectibles.splice(this.collectibles.indexOf(collectible), 1);
+        collectible.destroy();
+
+        if(entity.isHero)
+        {
+            PlayerStats.updateXP(collectible.xpPoint);
+            Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+        } else
+        {
+            entity.updateXP(collectible.xpPoint);
+        }
+        
     }
 
     resize()

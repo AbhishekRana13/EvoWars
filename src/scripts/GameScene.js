@@ -69,7 +69,7 @@ export class GameScene
        // this.uiContainer.addChild(debugBG2);
         
         this.createEntities(10);
-        this.createCollectibles(20);
+        this.createCollectibles(50);
 
 
         setInterval(() => {
@@ -105,6 +105,9 @@ export class GameScene
         this.counterText.anchor.set(1, 0);
         this.counterText.x -= config.logicalWidth * 0.05;
         this.uiContainer.addChild(this.counterText);
+
+
+       
     }
 
     resize()
@@ -155,43 +158,7 @@ export class GameScene
             gravity : [0, 0]
         });
 
-        Globals.world.on("beginContact", (evt) => {
-            
-            if( (evt.bodyA == this.heroContainer.body && this.collectibleManager.collectibles.filter(item => item.body == evt.bodyB).length > 0))
-            {
-                const filtered = this.collectibleManager.collectibles.filter(item => item.body == evt.bodyB)
-
-                for (let i = filtered.length - 1; i >= 0; i--) {
-                    const element = filtered[i];
-                    
-                    PlayerStats.updateXP(element.xpPoint);
-                    
-                    this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
-                    Globals.world.removeBody(element.body);
-                    element.destroy();
-                    
-                    this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
-                }
-
-            } else if ( (evt.bodyB == this.heroContainer.body && this.collectibleManager.collectibles.filter(item => item.body == evt.bodyA).length > 0))
-            {
-                const filtered = this.collectibleManager.collectibles.filter(item => item.body == evt.bodyA);
-
-                
-                for (let i = filtered.length - 1; i >= 0; i--) {
-                    const element = filtered[i];
-                    
-                    PlayerStats.updateXP(element.xpPoint);
-                    
-                    this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
-                    Globals.world.removeBody(element.body);
-                    element.destroy();
-                    
-                    this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
-                }
-            }
-            
-        }, this);
+       
 
         this.backgroundContainer = new PIXI.Container();
         
@@ -203,12 +170,60 @@ export class GameScene
 
         this.backgroundContainer.addChild(background);
         
-        
-        
+       // this.createCheckCollision()
+      //  this.checkGroupCollision();
         
         this.container.addChild(this.backgroundContainer);
 
 
+    }
+
+    checkGroupCollision()
+    {
+        Globals.world.on("beginContact", (evt) => {
+            
+            if((evt.shapeA.group & evt.shapeB.groupMask) != 0 && (evt.shapeB.group & evt.shapeA.groupMask) != 0)
+            {
+                console.log("COLLIDED", evt.shapeA.collisionGroup, evt.shapeB.collisionGroup);
+               // return;
+                const collectibleBody = (evt.shapeA.collisionGroup == gameSettings.CollisionGroups.COLLECTIBLE) ? evt.bodyA : evt.bodyB;
+                
+                if(collectibleBody != null && collectibleBody != undefined)
+                {
+                    const entityBody = (evt.shapeA.collisionGroup != gameSettings.CollisionGroups.COLLECTIBLE) ? evt.bodyA : evt.bodyB;
+                    this.collectCollectible(collectibleBody, entityBody);
+                }
+                    
+
+            }
+
+        }, this);
+    }
+
+    collectCollectible(collectibleBody, entityBody)
+    {
+        const filtered = this.collectibleManager.collectibles.filter(item => item.body == collectibleBody)
+
+        for (let i = filtered.length - 1; i >= 0; i--) {
+            const element = filtered[i];
+            
+           
+            
+            this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
+            Globals.world.removeBody(element.body);
+            element.destroy();
+            
+            if(entityBody.shapes[0].group == gameSettings.CollisionGroups.HERO)
+            {
+                PlayerStats.updateXP(element.xpPoint);
+                Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+            } else
+            {
+                console.log(entityBody);
+                entityBody.parentEntity.updateXP(element.xpPoint);
+            }
+                
+        }
     }
 
 
@@ -222,7 +237,7 @@ export class GameScene
        // this.sceneContainer.addChild(this.heroContainer.sBodyVisual);
 
         this.heroContainer.on("xpUpdated", () => {
-            this.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+            Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
         }, this);
         
         PlayerStats.onLevelUpdate = () => {
@@ -233,10 +248,10 @@ export class GameScene
 
     createHeroXPBar()
     {
-        this.xpBar = new XPBar();
-        this.xpBar.x = config.logicalWidth/2;
-        this.xpBar.y = config.logicalHeight - this.xpBar.height/2;
-        this.uiContainer.addChild(this.xpBar);
+        Globals.xpBar = new XPBar();
+        Globals.xpBar.x = config.logicalWidth/2;
+        Globals.xpBar.y = config.logicalHeight - Globals.xpBar.height/2;
+        this.uiContainer.addChild(Globals.xpBar);
     }
 
     createEntities(noOfEntities)
@@ -287,7 +302,7 @@ export class GameScene
             entity.update(dt);
         });
 
-       this.collectibleManager.update(dt);
+       this.collectibleManager.update(this.heroContainer, dt);
 
 
 

@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { Globals } from './Globals';
+import { gameSettings, Globals } from './Globals';
 import { clamp, getAngleBetween, getAngleInRadian } from './Utilities';
 import TWEEN from "@tweenjs/tween.js";
 import * as P2 from "./p2";
@@ -28,18 +28,46 @@ export class Entity extends PIXI.Container
             new TWEEN.Tween(this.currentDirection).to({x : this.direction.x, y : this.direction.y}, 2000).start();
         }, 3000);
 
-        
+        this.stats = {
+            level : 1,
+            xp : 0,
+            xpMax : 10,
+            x : 0.07,
+            y : 2
+        }
     }
 
     sizeReset()
     {
         console.log("RESET");
         //this.scale.set(this.scaleValue);
-        
 
-        console.log(this.parent.scale.x);
         this.body.shapes[0].radius = this.globalWidth/2;
         
+    }
+
+    updateXP(value)
+    {
+        this.stats.xp += value;
+
+        if(this.stats.xp > this.stats.xpMax)
+        {
+            const remainingXp = this.stats.xp - this.stats.xpMax;
+            this.level++;
+            this.stats.xpMax = Math.pow((this.stats.level / this.stats.x), this.stats.y);
+
+            this.stats.xp = remainingXp;
+
+            this.upScale();
+        }
+    }
+
+    upScale()
+    {
+        this.scaleValue *= 1.2;
+        this.scale.set(this.scaleValue);
+        this.body.shapes[0].radius = this.globalWidth/2;
+
     }
 
     createEntityVisual()
@@ -70,9 +98,12 @@ export class Entity extends PIXI.Container
        // console.log(this.offsetX, this.offsetY);
         const circleShape = new P2.Circle({
             radius : this.globalWidth/2,
-          // sensor : true
+           // sensor : true
         });
 
+         circleShape.group = gameSettings.CollisionGroups.ENTITY;
+        
+        this.body.parentEntity = this;
         this.body.addShape(circleShape);
         
         world.addBody(this.body);
@@ -104,6 +135,11 @@ export class Entity extends PIXI.Container
     get globalHeight()
     {
         return this.visual.height * this.scale.y * config.scaleFactor;
+    }
+
+    get globalRadius()
+    {
+        return this.globalWidth/2;
     }
 
     get globalPosition()

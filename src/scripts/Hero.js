@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { config } from './appConfig';
-import { Globals, PlayerStats } from './Globals';
+import { gameSettings, Globals, PlayerStats } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { DebugCircle } from './DebugCircle';
@@ -23,7 +23,7 @@ export class Hero extends PIXI.Container
 
         this.checkHit = false;
 
-        
+        this.isHero = true;
         //console.log(this.body.shapes[0]);
     }
 
@@ -76,18 +76,20 @@ export class Hero extends PIXI.Container
             fixedRotation : true
         });
 
-        this.circleShape = new P2.Circle({
+        const circleShape = new P2.Circle({
             radius : (this.globalWidth/2),
            sensor : true
         });
 
-        this.body.addShape(this.circleShape);
+         circleShape.group = gameSettings.CollisionGroups.HERO;
+
+        this.body.addShape(circleShape);
         
         world.addBody(this.body);
 
         //this.addBodyVisualisation(this.circleShape);
 
-        console.log(this.circleShape);
+        console.log(circleShape);
     }
 
     addBodyVisualisation(circleShape)
@@ -130,6 +132,8 @@ export class Hero extends PIXI.Container
             radius : this.globalWidth * 0.7,
             sensor : true
         });
+
+         circleShape.group = gameSettings.CollisionGroups.SWORD;
 
         this.sBody.addShape(circleShape);
         
@@ -196,6 +200,11 @@ export class Hero extends PIXI.Container
     get globalWidth()
     {
         return this.visual.width * this.scale.x * config.scaleFactor;
+    }
+
+    get globalRadius()
+    {
+        return this.globalWidth/2;
     }
 
     get globalHeight()

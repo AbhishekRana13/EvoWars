@@ -13,7 +13,14 @@ export const Globals = {
 
 export const gameSettings = {
     speed : 4,
-    boostedSpeed : 8
+    boostedSpeed : 8,
+    CollisionGroups : {
+        DEFAULT : 1,
+        SWORD : 2,
+        COLLECTIBLE : 4,
+        HERO : 8,
+        ENTITY : 16
+    }
 };
 
 export const PlayerStats = {
