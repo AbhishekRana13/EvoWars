@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import { config } from './appConfig';
 import { gameSettings, Globals } from './Globals';
 import * as P2 from "./p2";
+import { fetchGlobalPosition } from './Utilities';
 export class Collectible extends PIXI.Container
 {
     constructor(x, y, parent)
@@ -21,6 +22,24 @@ export class Collectible extends PIXI.Container
         const randomColor = Math.floor(Math.random()*16777215);//.toString(16);
         
 
+        this.body = new P2.Body({
+            // mass :1 ,
+            // position : [0, 0],
+            // fixedRotation : true
+            type : P2.Body.STATIC 
+        });
+
+        const circleShape = new P2.Circle({
+            radius : this.radius * config.scaleFactor,
+            sensor : true
+        })
+        circleShape.group = gameSettings.CollisionGroups.COLLECTIBLE;
+        
+        this.body.addShape(circleShape);
+        this.body.isDebug = true;
+        
+
+        Globals.world.addBody(this.body);
         
         
         const visualGraphic = new PIXI.Graphics();
@@ -37,5 +56,14 @@ export class Collectible extends PIXI.Container
     get globalRadius()
     {
         return this.radius * config.scaleFactor;
+    }
+
+    update(dt)
+    {
+        const position = fetchGlobalPosition(this);
+        this.body.position[0] = position.x;
+        this.body.position[1] = position.y;
+
+        
     }
 }

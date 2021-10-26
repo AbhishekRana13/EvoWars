@@ -74,7 +74,8 @@ export class GameScene
 
         setInterval(() => {
             if(Globals.entities.length < 30)
-                this.createEntities(10);
+                this.createEntities(5);
+                this.createCollectibles(10);
         },
         10000
         );
@@ -106,7 +107,12 @@ export class GameScene
         this.counterText.x -= config.logicalWidth * 0.05;
         this.uiContainer.addChild(this.counterText);
 
+        this.collectibleCounter = new Label(config.logicalWidth, 0, 0, "Collectibles : 0", 34, 0x000000);
+        this.collectibleCounter.anchor.set(1, 0);
+        this.collectibleCounter.x -= config.logicalWidth * 0.05;
+        this.collectibleCounter.y += config.logicalWidth * 0.05;
 
+        this.uiContainer.addChild(this.collectibleCounter);
        
     }
 
@@ -171,7 +177,7 @@ export class GameScene
         this.backgroundContainer.addChild(background);
         
        // this.createCheckCollision()
-      //  this.checkGroupCollision();
+        this.checkGroupCollision();
         
         this.container.addChild(this.backgroundContainer);
 
@@ -181,35 +187,37 @@ export class GameScene
     checkGroupCollision()
     {
         Globals.world.on("beginContact", (evt) => {
-            
-            if((evt.shapeA.group & evt.shapeB.groupMask) != 0 && (evt.shapeB.group & evt.shapeA.groupMask) != 0)
+    
+            if((evt.shapeA.group == gameSettings.CollisionGroups.HERO && evt.shapeB.group == gameSettings.CollisionGroups.COLLECTIBLE) ||
+                (evt.shapeB.group == gameSettings.CollisionGroups.HERO && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
             {
-                console.log("COLLIDED", evt.shapeA.collisionGroup, evt.shapeB.collisionGroup);
-               // return;
-                const collectibleBody = (evt.shapeA.collisionGroup == gameSettings.CollisionGroups.COLLECTIBLE) ? evt.bodyA : evt.bodyB;
-                
-                if(collectibleBody != null && collectibleBody != undefined)
-                {
-                    const entityBody = (evt.shapeA.collisionGroup != gameSettings.CollisionGroups.COLLECTIBLE) ? evt.bodyA : evt.bodyB;
-                    this.collectCollectible(collectibleBody, entityBody);
-                }
-                    
-
+                this.collectCollectible(evt.bodyA, evt.bodyB);
+            } else  if((evt.shapeA.group == gameSettings.CollisionGroups.ENTITY && evt.shapeB.group == gameSettings.CollisionGroups.COLLECTIBLE) ||
+            (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
+            {
+                this.collectCollectible(evt.bodyA, evt.bodyB);
             }
-
         }, this);
     }
 
-    collectCollectible(collectibleBody, entityBody)
+    collectCollectible(body1, body2)
     {
+
+        const collectibleBody = (body1.shapes[0].group == gameSettings.CollisionGroups.COLLECTIBLE) ? body1 : body2;
+        const entityBody = (body1.shapes[0].group == gameSettings.CollisionGroups.COLLECTIBLE) ? body2 : body1;
+    
         const filtered = this.collectibleManager.collectibles.filter(item => item.body == collectibleBody)
 
         for (let i = filtered.length - 1; i >= 0; i--) {
             const element = filtered[i];
             
-           
             
             this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
+            if(element.body.isDebug == true)
+            {
+                element.body.graphic.destroy();
+            }
+
             Globals.world.removeBody(element.body);
             element.destroy();
             
@@ -219,7 +227,7 @@ export class GameScene
                 Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
             } else
             {
-                console.log(entityBody);
+          
                 entityBody.parentEntity.updateXP(element.xpPoint);
             }
                 
@@ -271,7 +279,12 @@ export class GameScene
 
     createCollectibles(noOfCollectibles)
     {
-        this.collectibleManager = new CollectibleManager(this.backgroundContainer, noOfCollectibles);
+        if(this.collectibleManager != undefined && this.collectibleManager != null)
+        {
+            this.collectibleManager.addMore(this.backgroundContainer, noOfCollectibles);
+
+        } else
+            this.collectibleManager = new CollectibleManager(this.backgroundContainer, noOfCollectibles);
 
         
     }
@@ -307,6 +320,30 @@ export class GameScene
 
 
        this.counterText.text = "Enemies Counter : "+ ((Globals.entities == undefined) ? 0 : Globals.entities.length);
+    
+       this.collectibleCounter.text = "Collectibles : "+ ((this.collectibleManager == undefined) ? 0 : this.collectibleManager.collectibles.length);
+
+       this.debug();
+    }
+
+    debug()
+    {
+        Globals.world.bodies.forEach(body => {
+
+            if(body.isDebug != true) return;
+
+            if(body.graphic == undefined)
+            {
+                body.graphic = new PIXI.Graphics();
+                this.sceneContainer.addChild(body.graphic);
+                console.log("Graphic Created ", body.id);
+            }
+
+            body.graphic.clear();
+            body.graphic.beginFill(0xff0000, 1);
+            body.graphic.drawCircle(body.position[0], body.position[1], body.shapes[0].radius);
+            body.graphic.endFill();
+        });
     }
 
     updateWithMouse(dt)

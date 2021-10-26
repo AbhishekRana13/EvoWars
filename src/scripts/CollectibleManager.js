@@ -30,53 +30,57 @@ export class CollectibleManager
         
         
     }
-
-    update(hero, dt)
+    addMore(contianer, noOfCollectibles)
     {
+        for (let i = 0; i < noOfCollectibles; i++) {
 
-        for (let i = this.collectibles.length - 1; i >= 0; i--) {
-            const collectible = this.collectibles[i];
-            if(this.checkIfCollide(collectible, hero))
-            {
-                this.collectCollectible(collectible, hero)
-            } else
-            {
-                Globals.entities.forEach(entity => {
-                    if(this.checkIfCollide(collectible, entity))
-                    {
-                        this.collectCollectible(collectible, entity)
-                    }
-                });
-            }
+            const randomX = Math.floor((Math.random()* contianer.width) - contianer.width/2);
+            const randomY = Math.floor((Math.random()* contianer.height) - contianer.height/2);
+
+            const offset = 100;
+            randomX = clamp(randomX, -contianer.width/2 + offset, contianer.width/2 - offset);
+            randomY = clamp(randomY, -contianer.height/2 + offset, contianer.height/2 - offset);
+            
+            
+            
+            const collectible = new Collectible(randomX, randomY, contianer);
+
+
+            this.collectibles.push(collectible);
         }
     }
 
-    checkIfCollide(object1, object2)
+    update(hero, dt)
     {
-       
         
-        const object1Pos = fetchGlobalPosition(object1);
-        const object2Pos = fetchGlobalPosition(object2);
-        const direction = getDirectionBetween(object2Pos, object1Pos);
-        const distanceToCompare = object1.globalRadius + object2.globalRadius;
+        
 
-        return getMagnitude(direction) <= distanceToCompare;
+        for (let i = this.collectibles.length - 1; i >= 0; i--) {
+            const collectible = this.collectibles[i];
+
+            collectible.update();
+
+            // if(this.checkIfCollide(collectible, hero))
+            // {
+            //     this.collectCollectible(collectible, hero)
+            // } else
+            // {
+            //     // Globals.entities.forEach(entity => {
+            //     //     if(this.checkIfCollide(collectible, entity))
+            //     //     {
+            //     //       //  this.collectCollectible(collectible, entity)
+            //     //     }
+            //     // });
+            // }
+        }
     }
+
+
 
     collectCollectible(collectible, entity)
     {
            
-        this.collectibles.splice(this.collectibles.indexOf(collectible), 1);
-        collectible.destroy();
-
-        if(entity.isHero)
-        {
-            PlayerStats.updateXP(collectible.xpPoint);
-            Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
-        } else
-        {
-            entity.updateXP(collectible.xpPoint);
-        }
+       
         
     }
 
