@@ -36,7 +36,7 @@ export class Collectible extends PIXI.Container
         circleShape.group = gameSettings.CollisionGroups.COLLECTIBLE;
         
         this.body.addShape(circleShape);
-        this.body.isDebug = true;
+        //this.body.isDebug = true;
         
       
         Globals.world.addBody(this.body);

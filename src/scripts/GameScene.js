@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import {config } from './appConfig';
 import { Background } from './Background';
 import { Entity } from './Entity';
-import { gameSettings, Globals, PlayerStats } from './Globals';
+import { disposeData, gameSettings, Globals, PlayerStats } from './Globals';
 import { Hero } from './Hero';
 import { clamp, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
 import * as P2 from './p2';
@@ -13,6 +13,7 @@ import { DebugText } from './DebugText';
 import { XPBar } from './XPBar';
 import { CollectibleManager } from './CollectibleManager';
 import { Label } from './LabelScore';
+import { PromptMessage } from './PromptMessage';
 
 export class GameScene
 {
@@ -21,6 +22,7 @@ export class GameScene
         this.sceneContainer = new PIXI.Container();
 
         this.container = new PIXI.Container();
+        this.container.sortableChildren = true;
         this.uiContainer = new PIXI.Container();
 
         this.currentSpeed = gameSettings.speed;
@@ -101,7 +103,7 @@ export class GameScene
         this.createHeroXPBar();
         
 
-        //
+        
         this.counterText = new Label(config.logicalWidth, 0, 0, "Enemies Counter : 0", 34, 0x000000);
         this.counterText.anchor.set(1, 0);
         this.counterText.x -= config.logicalWidth * 0.05;
@@ -113,7 +115,10 @@ export class GameScene
         this.collectibleCounter.y += config.logicalWidth * 0.05;
 
         this.uiContainer.addChild(this.collectibleCounter);
+        
        
+
+        
     }
 
     resize()
@@ -244,6 +249,11 @@ export class GameScene
         //this.sceneContainer.addChild(this.heroContainer.bodyVisual);
        // this.sceneContainer.addChild(this.heroContainer.sBodyVisual);
 
+       this.heroContainer.on("destroyed", () => {
+           console.log("DESTROYED")
+            this.heroContainer = null;
+       }, this);
+        
         this.heroContainer.on("xpUpdated", () => {
             Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
         }, this);
@@ -270,6 +280,7 @@ export class GameScene
         for (let i = 0; i < noOfEntities; i++) {
             const entity = new Entity(this.backgroundContainer, Globals.world);
            // this.sceneContainer.addChild(entity.bodyVisual);
+            this.container.addChild(entity);
             Globals.entities.push(entity);
 
 
@@ -299,20 +310,25 @@ export class GameScene
         // this.graphicBox.y = this.boxBody.position[1];
         // this.graphicBox.rotation = this.boxBody.angle;
         
-        
+        if(this.heroContainer != undefined && this.heroContainer != null)
+        {
+            global.heroCast = () => console.log(this.heroContainer);
 
-        if(Globals.isMobile)
-            this.updateWithAnalog(dt);
-        else
-            this.updateWithMouse(dt);
+            if(Globals.isMobile)
+                this.updateWithAnalog(dt);
+            else
+                this.updateWithMouse(dt);
 
-        this.backgroundContainer.x = clamp(this.backgroundContainer.x, this.worldBounds.left, this.worldBounds.right);
-        this.backgroundContainer.y = clamp(this.backgroundContainer.y, this.worldBounds.top, this.worldBounds.bottom);
+            this.backgroundContainer.x = clamp(this.backgroundContainer.x, this.worldBounds.left, this.worldBounds.right);
+            this.backgroundContainer.y = clamp(this.backgroundContainer.y, this.worldBounds.top, this.worldBounds.bottom);
+            
+            this.heroContainer.update(dt);
+        }
         
-        this.heroContainer.update(dt);
 
         Globals.entities.forEach(entity => {
             entity.update(dt);
+            entity.checkDistanceFromHero(this.heroContainer);
         });
 
        this.collectibleManager.update(this.heroContainer, dt);
@@ -324,6 +340,20 @@ export class GameScene
        this.collectibleCounter.text = "Collectibles : "+ ((this.collectibleManager == undefined) ? 0 : this.collectibleManager.collectibles.length);
 
        this.debug();
+
+       for (let i = disposeData.containers.length - 1; i >= 0; i--) {
+            const element = disposeData.containers[i];
+            disposeData.containers.splice(i, 1);
+
+            element.destroy();
+            
+            if(element.isHero)
+                this.heroContainer = null;
+
+            const message = new PromptMessage("You Died! Noob!");
+            this.container.addChild(message);
+        }
+
     }
 
     debug()
@@ -344,21 +374,36 @@ export class GameScene
             body.graphic.clear();
             body.graphic.beginFill(0xff0ff0, 0.7);
 
-            
-            if(body.shapes[0].type == 8)
-            {
-                body.graphic.drawRect(body.shapes[0].width/2,  body.shapes[0].height/2 + body.shapes[0].position[1], -body.shapes[0].width, -body.shapes[0].height);
-                body.graphic.x = body.position[0];
-                body.graphic.y = body.position[1];
-
-            } else
-                body.graphic.drawCircle(body.position[0], body.position[1], body.shapes[0].radius);
+            body.shapes.forEach(shape => {
+                if(shape.type == 8)
+                {
+                    body.graphic.drawRect(shape.width/2 + shape.position[0],  shape.height/2 + shape.position[1], -shape.width, -shape.height);
+                    body.graphic.x = body.position[0];
+                    body.graphic.y = body.position[1];
+    
+                } else
+                {
+                    body.graphic.drawCircle(shape.position[0], shape.position[1], shape.radius);
+                    body.graphic.x = body.position[0];
+                    body.graphic.y = body.position[1];
+                }
+                   
+            });
+           
 
             
             body.graphic.endFill();
             //body.graphic.angle = 15;
             body.graphic.rotation = body.angle;
         });
+
+        for (let i = disposeData.debugGraphic.length - 1; i >= 0; i--) {
+            const element = disposeData.debugGraphic[i];
+            disposeData.debugGraphic.splice(i, 1);
+
+            element.destroy();
+        }
+
     }
 
     updateWithMouse(dt)

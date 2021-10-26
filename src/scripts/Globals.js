@@ -32,7 +32,7 @@ export const PlayerStats = {
     updateXP(value)
     {
         this.xp += value;
-
+        this.reward += value;
         if(this.xp > this.xpMax)
         {
             const remainingXp = this.xp - this.xpMax;
@@ -45,5 +45,11 @@ export const PlayerStats = {
                 this.onLevelUpdate();
         }
     },
-    onLevelUpdate : null
+    onLevelUpdate : null,
+    reward : 20
 };
+
+export const disposeData = {
+    debugGraphic : [],
+    containers : []
+}

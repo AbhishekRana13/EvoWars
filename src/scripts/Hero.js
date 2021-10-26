@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
 import { config } from './appConfig';
-import { gameSettings, Globals, PlayerStats } from './Globals';
+import { disposeData, gameSettings, Globals, PlayerStats } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { DebugCircle } from './DebugCircle';
@@ -25,6 +25,7 @@ export class Hero extends PIXI.Container
 
         this.isHero = true;
 
+        
        
         //console.log(this.body.shapes[0]);
     }
@@ -124,7 +125,7 @@ export class Hero extends PIXI.Container
 
     
 
-       this.createTriggerCenter();
+    
        
        this.sBody = new P2.Body({
             mass : 1,//type : P2.Body.KINEMATIC,
@@ -132,7 +133,7 @@ export class Hero extends PIXI.Container
             fixedRotation : true
         });
 
-        this.sBody.isDebug = true;
+       // this.sBody.isDebug = true;
         
         const rectShape = new P2.Box({
             width : this.sword.width * this.scale.x * config.scaleFactor,
@@ -155,22 +156,7 @@ export class Hero extends PIXI.Container
        
     }
 
-    createTriggerCenter()
-    {
-        this.triggerCenter = new PIXI.Container();
-        
-        this.triggerCenter.y =  - this.visual.width * 0.6;
-        const center = new PIXI.Graphics();
-        center.beginFill(0x00ffff);
-        
-        center.drawCircle(0, 0, 10);
-        center.endFill();
-
-        this.triggerCenter.addChild(center);
-
-        this.addChild(this.triggerCenter);
-    }
-
+ 
   
 
 
@@ -251,12 +237,27 @@ export class Hero extends PIXI.Container
                 if(this.sBody.overlaps(entity.body))
                 {
                     console.log("OVERLAPED");
+                   
+
+
+                    if(entity.body.isDebug)
+                    {
+                        disposeData.debugGraphic.push(entity.body.graphic);
+                    }
+
+                    if(entity.sBody.isDebug)
+                    {
+                        disposeData.debugGraphic.push(entity.sBody.graphic);
+                    }
+
                     Globals.world.removeBody(entity.body);
+                    Globals.world.removeBody(entity.sBody);
                     
+                    PlayerStats.updateXP(entity.stats.reward);
                     entity.destroy();
                     Globals.entities.splice(i, 1);
 
-                    PlayerStats.updateXP(30);
+                    
                     this.emit("xpUpdated");
                 }
             }
@@ -268,11 +269,9 @@ export class Hero extends PIXI.Container
     update(dt)
     {
         const position = fetchGlobalPosition(this.sword);
-       // position.x -= (this.sword.height /2) * this.scale.y * config.scaleFactor;
-      //  position.y -= (this.sword.height /2) * this.scale.y * config.scaleFactor;
         this.sBody.position = [position.x, position.y];
 
-       this.sBody.angle =  this.sword.rotation + this.rotation//this.angle  * (Math.PI/180);
+       this.sBody.angle =  this.sword.rotation + this.rotation
         if(this.sBodyVisual)
         {
             this.sBodyVisual.x = this.sBody.position[0];
