@@ -77,7 +77,8 @@ export class GameScene
         setInterval(() => {
             if(Globals.entities.length < 30)
                 this.createEntities(5);
-                this.createCollectibles(10);
+            if(this.collectibleManager.collectibles.length < 50)
+                this.createCollectibles(5);
         },
         10000
         );
@@ -454,7 +455,7 @@ export class GameScene
         } else if (msgType == "leftMouseDown")
         {
             if(!Globals.isMobile)
-                this.heroContainer.swingSword();
+                this.heroContainer?.swingSword();
         } else if(msgType == "leftMouseUp")
         {
             if(PIXI.utils.isMobile.any)
@@ -475,11 +476,11 @@ export class GameScene
     initiateMobileInputs()
     {
         this.mobileContainer = new PIXI.Container();
-        this.mobileContainer.position = new PIXI.Point(appConfig.halfWidth, appConfig.height);
+        this.mobileContainer.position = new PIXI.Point(config.logicalWidth/2, config.logicalHeight);
 
        
-        const radius = appConfig.height * 0.07;
-        const analogPoint = new PIXI.Point(-appConfig.halfWidth + radius * 2, 0);
+        const radius = config.logicalHeight * 0.07;
+        const analogPoint = new PIXI.Point(-config.logicalWidth/2 + radius * 2, 0);
         const analogOuterCircle = new PIXI.Graphics();
         analogOuterCircle.beginFill(0xcccccc);
         analogOuterCircle.drawCircle(0 , 0, radius);
@@ -488,7 +489,7 @@ export class GameScene
 
         this.analogInnerCircle = new PIXI.Graphics();
         this.analogInnerCircle.beginFill(0x5c5c5c);
-        this.analogInnerCircle.drawCircle(0, 0, appConfig.height * 0.01);
+        this.analogInnerCircle.drawCircle(0, 0, config.logicalHeight * 0.01);
         this.analogInnerCircle.endFill();
         this.analogInnerCircle.x = analogPoint.x;
         this.mobileContainer.addChild(analogOuterCircle);
