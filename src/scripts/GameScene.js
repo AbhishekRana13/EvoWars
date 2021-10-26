@@ -336,13 +336,28 @@ export class GameScene
             {
                 body.graphic = new PIXI.Graphics();
                 this.sceneContainer.addChild(body.graphic);
-                console.log("Graphic Created ", body.id);
+                //console.log("Graphic Created ", body.id);
+
+                //console.log(body.shapes[0].type == 8);
             }
 
             body.graphic.clear();
-            body.graphic.beginFill(0xff0000, 1);
-            body.graphic.drawCircle(body.position[0], body.position[1], body.shapes[0].radius);
+            body.graphic.beginFill(0xff0ff0, 0.7);
+
+            
+            if(body.shapes[0].type == 8)
+            {
+                body.graphic.drawRect(body.shapes[0].width/2,  body.shapes[0].height/2 + body.shapes[0].position[1], -body.shapes[0].width, -body.shapes[0].height);
+                body.graphic.x = body.position[0];
+                body.graphic.y = body.position[1];
+
+            } else
+                body.graphic.drawCircle(body.position[0], body.position[1], body.shapes[0].radius);
+
+            
             body.graphic.endFill();
+            //body.graphic.angle = 15;
+            body.graphic.rotation = body.angle;
         });
     }
 

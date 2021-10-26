@@ -38,7 +38,7 @@ export class Collectible extends PIXI.Container
         this.body.addShape(circleShape);
         this.body.isDebug = true;
         
-
+      
         Globals.world.addBody(this.body);
         
         

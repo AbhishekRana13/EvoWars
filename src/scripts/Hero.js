@@ -24,6 +24,8 @@ export class Hero extends PIXI.Container
         this.checkHit = false;
 
         this.isHero = true;
+
+       
         //console.log(this.body.shapes[0]);
     }
 
@@ -50,7 +52,11 @@ export class Hero extends PIXI.Container
 
         this.scale.set(this.scaleValue);
         this.body.shapes[0].radius = this.globalWidth/2;
-        this.sBody.shapes[0].radius = this.globalWidth * 0.7;
+        this.sBody.shapes[0].width = this.sword.width * this.scale.x * config.scaleFactor;
+        this.sBody.shapes[0].height = this.sword.height * this.scale.x * config.scaleFactor;
+
+        this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
+
 
     }
 
@@ -126,17 +132,21 @@ export class Hero extends PIXI.Container
             fixedRotation : true
         });
 
-       
-
-        const circleShape = new P2.Circle({
-            radius : this.globalWidth * 0.7,
-            sensor : true
-        });
-
-         circleShape.group = gameSettings.CollisionGroups.SWORD;
-
-        this.sBody.addShape(circleShape);
+        this.sBody.isDebug = true;
         
+        const rectShape = new P2.Box({
+            width : this.sword.width * this.scale.x * config.scaleFactor,
+            height : this.sword.height * this.scale.y * config.scaleFactor,
+            sensor : true
+        })
+
+        
+
+        rectShape.group = gameSettings.CollisionGroups.SWORD;
+
+        this.sBody.addShape(rectShape);
+        this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
+        console.log(this.sBody.shapes[0].position);
         world.addBody(this.sBody);
         
 
@@ -252,15 +262,19 @@ export class Hero extends PIXI.Container
             }
         }
     }
+
+    
     
     update(dt)
     {
-        this.sBody.position = [fetchGlobalPosition(this.triggerCenter).x, fetchGlobalPosition(this.triggerCenter).y];
+        const position = fetchGlobalPosition(this.sword);
+       // position.x -= (this.sword.height /2) * this.scale.y * config.scaleFactor;
+      //  position.y -= (this.sword.height /2) * this.scale.y * config.scaleFactor;
+        this.sBody.position = [position.x, position.y];
 
+       this.sBody.angle =  this.sword.rotation + this.rotation//this.angle  * (Math.PI/180);
         if(this.sBodyVisual)
         {
-          
-
             this.sBodyVisual.x = this.sBody.position[0];
             this.sBodyVisual.y = this.sBody.position[1];
             this.sBodyVisual.rotation = this.sBody.angle;
@@ -270,7 +284,6 @@ export class Hero extends PIXI.Container
             this.sBodyVisual.drawCircle(0, 0, this.sBody.shapes[0].radius);
             this.sBodyVisual.endFill();
         }
-
 
 
         this.CheckEnemyHit();
