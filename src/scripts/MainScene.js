@@ -17,9 +17,9 @@ export class MainScene
         this.container.x = config.leftX;
         this.container.y = config.topY;
 
-        const background = new Background(Globals.resources.background.texture, window.innerWidth, window.innerHeight, 1);
+        this.background = new Background(Globals.resources.background.texture, window.innerWidth, window.innerHeight, 1);
 
-        this.sceneContainer.addChild(background);
+        this.sceneContainer.addChild(this.background);
 
         this.sceneContainer.addChild(this.container);
 
@@ -78,6 +78,16 @@ export class MainScene
         globalThis.logInput = () => console.log(input.text);
     }
 
+
+    resize()
+    {
+        this.background.width = window.innerWidth;
+        this.background.height = window.innerHeight;
+
+        this.container.scale.set(config.scaleFactor);
+        this.container.x = config.leftX;
+        this.container.y = config.topY;
+    }
 
 
 }
