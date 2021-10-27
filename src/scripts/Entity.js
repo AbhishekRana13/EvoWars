@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { disposeData, gameSettings, Globals } from './Globals';
+import { disposeData, gameSettings, Globals, PlayerStats } from './Globals';
 import { clamp, fetchGlobalPosition, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, normalize } from './Utilities';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
@@ -25,6 +25,7 @@ export class Entity extends PIXI.Container
         this.isTurning = false;
         this.followTarget = null;
         this.isSwinging = false;
+        this.dirToMove = 1;
 
         this.direction = new PIXI.Point((Math.random() * 2) - 1, (Math.random() * 2) - 1);
         
@@ -66,6 +67,8 @@ export class Entity extends PIXI.Container
         this.sBody.shapes[0].height = this.sword.height * this.scale.x * config.scaleFactor;
 
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
+
+        this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 4;
     }
 
     updateXP(value)
@@ -95,6 +98,8 @@ export class Entity extends PIXI.Container
         this.sBody.shapes[0].height = this.sword.height * this.scale.x * config.scaleFactor;
 
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
+
+        this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 4;
     }
 
     createEntityVisual()
@@ -143,7 +148,25 @@ export class Entity extends PIXI.Container
 
        // console.log(circleShape);
 
-        
+        this.createSightRadius();
+    }
+
+    createSightRadius()
+    {
+        this.sightBody = new P2.Body({
+            type : P2.Body.KINEMATIC
+        });
+
+        //this.sightBody.isDebug = true;
+        this.sightBody.debugColor = 0x00ff00;
+        const circleShape = new P2.Circle({
+            radius : this.body.shapes[0].radius * 4,
+            sensor : true
+        });
+        circleShape.group = gameSettings.CollisionGroups.SIGHT;
+        this.sightBody.addShape(circleShape);
+        this.sightBody.parentEntity = this;
+        Globals.world.addBody(this.sightBody);
     }
 
     addBodyVisualisation(circleShape)
@@ -193,7 +216,7 @@ export class Entity extends PIXI.Container
 
         this.sBody.addShape(rectShape);
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
-        console.log(this.sBody.shapes[0].position);
+       // console.log(this.sBody.shapes[0].position);
         world.addBody(this.sBody);
         
 
@@ -254,7 +277,7 @@ export class Entity extends PIXI.Container
         this.body.position[1] *= config.scaleFactor;
         this.body.position[1] += config.topY;
 
-        
+        this.sightBody.position = this.body.position;
 
         this.x = ((this.body.position[0] - config.leftX) / config.scaleFactor) //- this.backgroundContainer.x;
         this.y = ((this.body.position[1] - config.topY) / config.scaleFactor) //- this.backgroundContainer.y;
@@ -299,8 +322,19 @@ export class Entity extends PIXI.Container
         {
             this.toSkip = true;
             this.followTarget = hero;
+
+
             
         }
+    }
+
+    checkNearbyTarget(entityBody)
+    {
+        if(this.followTarget != null || entityBody == null) return;
+
+        this.toSkip = true;
+        this.followTarget = entityBody.parentEntity;
+           
     }
 
 
@@ -314,16 +348,37 @@ export class Entity extends PIXI.Container
         if(getMagnitude(direction) > ((this.body.shapes[0].radius * 4) +  this.followTarget.body.shapes[0].radius))
         {
             this.followTarget = null;
+            this.dirToMove = 1;
             return;
         } else if(getMagnitude(direction) < (this.body.shapes[0].radius + this.followTarget.body.shapes[0].radius))
         {
             this.swingSword();
         }
 
+        if(this.followTarget.isHero == true)
+        {
+            if(PlayerStats.level > this.stats.level || PlayerStats.xp > this.stats.xp)
+            {
+                this.dirToMove = -1;
+            } else 
+            {
+                this.dirToMove = 1;
+            }
+        } else if (this.followTarget.stats.level > this.stats.level || this.followTarget.stats.xp > this.stats.xp)
+        {
+            this.dirToMove = -1;
+        } else
+        {
+            this.dirToMove = 1;
+        }
+
+
         if(this.isTurning) return;
         
         this.toSkip = true;
         this.direction = normalize(direction);
+        this.direction.x *= this.dirToMove;
+        this.direction.y *= this.dirToMove;
         this.isTurning = true;
         new TWEEN.Tween(this.currentDirection).to({x : this.direction.x, y : this.direction.y}, 150).onComplete(() => {
             this.isTurning = false;
@@ -337,15 +392,18 @@ export class Entity extends PIXI.Container
     {
         if(this.isSwinging) return;
         this.isSwinging = true;
-        this.checkHit = true;
+        this.checkHit = true; 
+
+        const randomTimer = (Math.random() * 200) + 100;
+
         new TWEEN.Tween(this.sword)
-            .to({angle : 90, x : 0, y : -this.visual.width * 0.8, scale : {x : 0.7, y : 0.9} }, 150)
+            .to({angle : 90, x : 0, y : -this.visual.width * 0.8, scale : {x : 0.7, y : 0.9} }, randomTimer)
             .easing(Easing.Back.In)
             .onComplete((object) => {
                 this.checkHit = false;
                 new TWEEN.Tween(object)
-                    .to({angle : -20, x : -this.visual.width * 0.8, y : 0, scale : {x : 0.8, y : 0.8}}, 150)
-                    .delay(150)
+                    .to({angle : -20, x : -this.visual.width * 0.8, y : 0, scale : {x : 0.8, y : 0.8}}, randomTimer)
+                    .delay(randomTimer)
                     .onComplete(() => {
                         this.isSwinging = false;
                     })
@@ -374,12 +432,35 @@ export class Entity extends PIXI.Container
                         disposeData.debugGraphic.push(this.followTarget.sBody.graphic);
                     }
 
+                    
+
                     Globals.world.removeBody(this.followTarget.body);
                     Globals.world.removeBody(this.followTarget.sBody);
                    
                    // this.followTarget.destroy();
-                    disposeData.containers.push(this.followTarget);
-                    this.updateXP(30);
+                  
+                   if(this.followTarget.body.shapes[0].group == gameSettings.CollisionGroups.ENTITY)
+                   {
+
+                        if(this.followTarget.sightBody.isDebug)
+                        {
+                           
+                            disposeData.debugGraphic.push(this.followTarget.sightBody.graphic);
+                        }
+
+                        Globals.world.removeBody(this.followTarget.sightBody);
+
+
+                        this.updateXP(this.followTarget.stats.reward);
+                        this.followTarget.destroy();
+                        Globals.entities.splice(Globals.entities.indexOf(this.followTarget), 1);
+                   } else
+                   {
+                        this.updateXP(PlayerStats.reward);
+                        disposeData.containers.push(this.followTarget);
+                   }
+
+                    
 
                     this.followTarget = null;
                     

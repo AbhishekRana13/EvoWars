@@ -83,12 +83,7 @@ export class GameScene
         10000
         );
 
-        console.log(Globals.isMobile);
-        if(Globals.isMobile)
-        {
-            this.initiateMobileInputs();
-            this.mobileDir = new PIXI.Point(0, 0);
-        }
+       
 
 
         this.worldBounds = {};
@@ -117,7 +112,12 @@ export class GameScene
 
         this.uiContainer.addChild(this.collectibleCounter);
         
-       
+        console.log(Globals.isMobile);
+        if(Globals.isMobile)
+        {
+            this.initiateMobileInputs();
+            this.mobileDir = new PIXI.Point(0, 0);
+        }
 
         
     }
@@ -133,7 +133,7 @@ export class GameScene
         this.fullBG.endFill();
 
 
-        this.heroContainer.sizeReset();
+        this.heroContainer?.sizeReset();
         
      
 
@@ -202,7 +202,23 @@ export class GameScene
             (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
             {
                 this.collectCollectible(evt.bodyA, evt.bodyB);
+            } else if((evt.shapeA.group == gameSettings.CollisionGroups.ENTITY && evt.shapeB.group == gameSettings.CollisionGroups.SIGHT)||
+                        (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.SIGHT))
+            {
+                
+                const body1 = evt.bodyA;
+                const body2 = evt.bodyB; 
+                
+                if(body1.parentEntity == body2.parentEntity) return;
+                const sightBody = (body1.shapes[0].group == gameSettings.CollisionGroups.SIGHT) ? body1 : body2;
+                const entityBody = (body1.shapes[0].group == gameSettings.CollisionGroups.SIGHT) ? body2 : body1;
+
+                sightBody.parentEntity.checkNearbyTarget(entityBody);
+                
             }
+
+
+            
         }, this);
     }
 
@@ -221,7 +237,8 @@ export class GameScene
             this.collectibleManager.collectibles.splice(this.collectibleManager.collectibles.indexOf(element), 1);
             if(element.body.isDebug == true)
             {
-                element.body.graphic.destroy();
+                disposeData.debugGraphic.push(element.body.graphic);
+            
             }
 
             Globals.world.removeBody(element.body);
@@ -269,7 +286,14 @@ export class GameScene
     {
         Globals.xpBar = new XPBar();
         Globals.xpBar.x = config.logicalWidth/2;
-        Globals.xpBar.y = config.logicalHeight - Globals.xpBar.height/2;
+
+        if(Globals.isMobile)
+        {
+            Globals.xpBar.y = Globals.xpBar.height/2;
+        } else
+        {
+            Globals.xpBar.y = config.logicalHeight - Globals.xpBar.height/2;
+        }
         this.uiContainer.addChild(Globals.xpBar);
     }
 
@@ -328,8 +352,8 @@ export class GameScene
         
 
         Globals.entities.forEach(entity => {
-            entity.update(dt);
-            entity.checkDistanceFromHero(this.heroContainer);
+            entity?.update(dt);
+            entity?.checkDistanceFromHero(this.heroContainer);
         });
 
        this.collectibleManager.update(this.heroContainer, dt);
@@ -373,7 +397,7 @@ export class GameScene
             }
 
             body.graphic.clear();
-            body.graphic.beginFill(0xff0ff0, 0.7);
+            body.graphic.beginFill((body.debugColor != undefined) ? body.debugColor : 0xff0ff0, 0.7);
 
             body.shapes.forEach(shape => {
                 if(shape.type == 8)
@@ -458,14 +482,19 @@ export class GameScene
                 this.heroContainer?.swingSword();
         } else if(msgType == "leftMouseUp")
         {
+            
+            
+            
+            
+        } else if(msgType == "touchEnd")
+        {
             if(PIXI.utils.isMobile.any)
             {
                 this.hasMobileInputPressed = false;
-                this.analogInnerCircle.reset();
+
+                if(msgParams.identifier == this.analogPointerID)
+                    this.analogInnerCircle.reset();
             }
-            
-            
-            
         }
         
         
@@ -479,8 +508,8 @@ export class GameScene
         this.mobileContainer.position = new PIXI.Point(config.logicalWidth/2, config.logicalHeight);
 
        
-        const radius = config.logicalHeight * 0.07;
-        const analogPoint = new PIXI.Point(-config.logicalWidth/2 + radius * 2, 0);
+        const radius = 150;
+        const analogPoint = new PIXI.Point(-radius*4, 0);
         const analogOuterCircle = new PIXI.Graphics();
         analogOuterCircle.beginFill(0xcccccc);
         analogOuterCircle.drawCircle(0 , 0, radius);
@@ -489,7 +518,7 @@ export class GameScene
 
         this.analogInnerCircle = new PIXI.Graphics();
         this.analogInnerCircle.beginFill(0x5c5c5c);
-        this.analogInnerCircle.drawCircle(0, 0, config.logicalHeight * 0.01);
+        this.analogInnerCircle.drawCircle(0, 0, radius * 0.25);
         this.analogInnerCircle.endFill();
         this.analogInnerCircle.x = analogPoint.x;
         this.mobileContainer.addChild(analogOuterCircle);
@@ -546,12 +575,18 @@ export class GameScene
         //Boost Button
         const boostBtn = new PIXI.Graphics();
         boostBtn.beginFill(0xFF7F50);
+        boostBtn.lineStyle(5, 0x000000);
         boostBtn.drawCircle(0 , 0, radius * 0.6);
         boostBtn.endFill();
         boostBtn.x = -analogPoint.x + radius;
         boostBtn.y -= radius;
 
         boostBtn.interactive = true;
+
+
+        const boostBtnText = new Label(boostBtn.x, boostBtn.y, 0.5, "Boost", 44, 0x3c3c3c);
+        boostBtnText.style.fontWeight = "bold";
+        
         const text = new DebugText("---", 0, 0, "#000", 48);
         this.mobileContainer.addChild(text);
 
@@ -574,27 +609,33 @@ export class GameScene
         }, this);
 
         this.mobileContainer.addChild(boostBtn);
-
+        this.mobileContainer.addChild(boostBtnText);
+        console.log(boostBtnText)
 
         //Fire Button
         const swingBtn = new PIXI.Graphics();
         swingBtn.beginFill(0x3CB371);
+        swingBtn.lineStyle(5, 0x000000);
         swingBtn.drawCircle(0 , 0, radius * 0.6);
         swingBtn.endFill();
         swingBtn.x = -analogPoint.x;
         swingBtn.y += radius * 0.5;
         swingBtn.interactive = true;
 
+        const swingBtnText = new Label(swingBtn.x, swingBtn.y, 0.5, "Swing", 44, 0x3c3c3c);
+        swingBtnText.style.fontWeight = "bold";
        
         swingBtn.on("touchstart",(e) => {
             console.log(e);
             this.heroContainer.swingSword();
         }, this);
 
-        this.mobileContainer.addChild(swingBtn);
 
+
+        this.mobileContainer.addChild(swingBtn);
+        this.mobileContainer.addChild(swingBtnText);
         this.mobileContainer.y -= analogOuterCircle.height;
-        this.container.addChild(this.mobileContainer);
+        this.uiContainer.addChild(this.mobileContainer);
 
         
     }

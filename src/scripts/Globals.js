@@ -5,7 +5,7 @@ export const Globals = {
     world : null,
     worldBounds : new PIXI.Bounds(),
     get isMobile() {
-       // return true;
+      //  return true;
         return PIXI.utils.isMobile.any;
     },
     entities : []
@@ -19,7 +19,8 @@ export const gameSettings = {
         SWORD : 2,
         COLLECTIBLE : 4,
         HERO : 8,
-        ENTITY : 16
+        ENTITY : 16,
+        SIGHT : 32
     }
 };
 
