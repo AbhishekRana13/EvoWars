@@ -339,6 +339,20 @@ export class GameScene
         {
             global.heroCast = () => console.log(this.heroContainer);
 
+                       
+            if(this.currentSpeed == gameSettings.boostedSpeed)
+            {
+                if((PlayerStats.level > 1 || PlayerStats.xp > 0 ))
+                {
+                    PlayerStats.depleteXP(gameSettings.depleteValue);
+                    Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+                } else
+                {
+                    this.currentSpeed = gameSettings.speed;
+                }
+                
+            } 
+
             if(Globals.isMobile)
                 this.updateWithAnalog(dt);
             else
@@ -440,18 +454,6 @@ export class GameScene
         {
             this.heroContainer.body.angle = getAngleInRadian({x: 0, y : -1}, dir);
 
-            if(this.currentSpeed == gameSettings.boostedSpeed)
-            {
-                if((PlayerStats.level > 1 || PlayerStats.xp > 0 ))
-                {
-                    PlayerStats.depleteXP(gameSettings.depleteValue);
-                    Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
-                } else
-                {
-                    this.currentSpeed = gameSettings.speed;
-                }
-                
-            } 
 
             this.backgroundContainer.x -= dir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= dir.y *this.currentSpeed*dt;
@@ -468,6 +470,9 @@ export class GameScene
         if(getMagnitude(this.mobileDir) != 0 && !this.heroContainer.isSwinging)
         {
             this.heroContainer.body.angle = getAngleInRadian({x: 0, y : -1}, this.mobileDir);
+
+
+ 
 
             this.backgroundContainer.x -= this.mobileDir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= this.mobileDir.y *this.currentSpeed*dt;
