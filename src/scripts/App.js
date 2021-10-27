@@ -5,6 +5,7 @@ import { SceneManager } from "./SceneManager";
 import { CalculateScaleFactor, config} from "./appConfig";
 import { MyEmitter } from "./MyEmitter";
 import { GameScene } from "./GameScene";
+import { MainScene } from "./MainScene";
 
 
 export class App {
@@ -92,7 +93,9 @@ export class App {
             setTimeout(() => {
                 loaderContainer.destroy();
 
-                Globals.scene.start(new GameScene());
+                Globals.scene.start(new MainScene());
+
+                // Globals.scene.start(new GameScene());
             }, 1000);
         });
 

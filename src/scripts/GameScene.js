@@ -14,6 +14,7 @@ import { XPBar } from './XPBar';
 import { CollectibleManager } from './CollectibleManager';
 import { Label } from './LabelScore';
 import { PromptMessage } from './PromptMessage';
+import * as nameData from './names.json';
 
 export class GameScene
 {
@@ -119,6 +120,8 @@ export class GameScene
             this.mobileDir = new PIXI.Point(0, 0);
         }
 
+        // const message = new PromptMessage("You Died! Noob!");
+        //     this.container.addChild(message);
         
     }
 
@@ -260,10 +263,10 @@ export class GameScene
 
     createHeroContainer()
     {
-        this.heroContainer = new Hero(Globals.world);
+        this.heroContainer = new Hero(Globals.world, Globals.heroName);
         
         this.container.addChild(this.heroContainer);
-
+        this.container.addChild(this.heroContainer.nameText);
         //this.sceneContainer.addChild(this.heroContainer.bodyVisual);
        // this.sceneContainer.addChild(this.heroContainer.sBodyVisual);
 
@@ -303,9 +306,12 @@ export class GameScene
             Globals.entities = [];
 
         for (let i = 0; i < noOfEntities; i++) {
-            const entity = new Entity(this.backgroundContainer, Globals.world);
+            const index = Math.floor(Math.random() * nameData.length);
+
+            const entity = new Entity(this.backgroundContainer, Globals.world, nameData.at(index));
            // this.sceneContainer.addChild(entity.bodyVisual);
             this.container.addChild(entity);
+            this.container.addChild(entity.nameText);
             Globals.entities.push(entity);
 
 
@@ -368,6 +374,8 @@ export class GameScene
         Globals.entities.forEach(entity => {
             entity?.update(dt);
             entity?.checkDistanceFromHero(this.heroContainer);
+            
+            
         });
 
        this.collectibleManager.update(this.heroContainer, dt);
@@ -385,9 +393,14 @@ export class GameScene
             disposeData.containers.splice(i, 1);
 
             element.destroy();
-            
+            element.nameText?.destroy();
+
             if(element.isHero)
+            {
                 this.heroContainer = null;
+                
+            }
+                
 
             const message = new PromptMessage("You Died! Noob!");
             this.container.addChild(message);

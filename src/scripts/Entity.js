@@ -7,7 +7,7 @@ import { config } from './appConfig';
 import { Label } from './LabelScore';
 export class Entity extends PIXI.Container
 {
-    constructor(parentContainer, world)
+    constructor(parentContainer, world, name)
     {
         super();
         this.backgroundContainer = parentContainer;
@@ -62,6 +62,12 @@ export class Entity extends PIXI.Container
         this.xpText.style.fontWeight = "bold";
 
         this.addChild(this.xpText);
+
+        
+
+        this.nameText = new Label(this.visual.x, 0 - this.globalRadius, 0.5, name, 28, 0x3c3c3c);
+        this.nameText.anchor.set(0.5, 0);
+       
     }
 
     sizeReset()
@@ -365,6 +371,11 @@ export class Entity extends PIXI.Container
         {
             this.isInBoostedMode = true;
         }
+
+
+        this.nameText.x = this.x;
+        this.nameText.y = this.y + this.globalRadius;
+
     }
 
     updateBodyVisual(dt)
@@ -441,7 +452,7 @@ export class Entity extends PIXI.Container
         {
             if(PlayerStats.level > this.stats.level || PlayerStats.xp > this.stats.xp)
             {
-                this.dirToMove = -1;
+                this.dirToMove = (Math.random() > 0.5) ? 1 : -1;
             } else 
             {
                 this.dirToMove = 1;
@@ -534,6 +545,7 @@ export class Entity extends PIXI.Container
 
                         console.log(this.followTarget.stats.reward);
                         this.updateXP(this.followTarget.stats.reward);
+                        this.followTarget.nameText?.destroy();
                         this.followTarget.destroy();
                         Globals.entities.splice(Globals.entities.indexOf(this.followTarget), 1);
                    } else

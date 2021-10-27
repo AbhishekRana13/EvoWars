@@ -8,7 +8,8 @@ export const Globals = {
       //  return true;
         return PIXI.utils.isMobile.any;
     },
-    entities : []
+    entities : [],
+    heroName : "Abhi"
 };
 
 export const gameSettings = {

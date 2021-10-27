@@ -5,10 +5,11 @@ import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { DebugCircle } from './DebugCircle';
 import { fetchGlobalPosition, getDirectionBetween, getMagnitude, getMousePosition, normalize } from './Utilities';
+import { Label } from './LabelScore';
 
 export class Hero extends PIXI.Container
 {
-    constructor(world)
+    constructor(world, name)
     {
         super();
 //        this.scale.set(gameConfig.widthRatio * 0.7);
@@ -26,7 +27,8 @@ export class Hero extends PIXI.Container
         this.isHero = true;
 
         
-       
+        this.nameText = new Label(this.visual.x, 0 - this.globalRadius, 0.5, name, 28, 0x3c3c3c);
+        this.nameText.anchor.set(0.5, 0);
         //console.log(this.body.shapes[0]);
     }
 
@@ -67,6 +69,7 @@ export class Hero extends PIXI.Container
 
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
 
+        
 
     }
 
@@ -264,6 +267,7 @@ export class Hero extends PIXI.Container
                     
                     PlayerStats.updateXP(entity.stats.reward);
                     entity.destroy();
+                    entity.nameText?.destroy();
                     Globals.entities.splice(i, 1);
 
                     
@@ -305,6 +309,9 @@ export class Hero extends PIXI.Container
         this.y = (this.body.position[1]- config.topY) / config.scaleFactor;
 
         this.rotation = this.body.angle;
+
+        this.nameText.x = this.x;
+        this.nameText.y = this.y + this.globalRadius;
         
         if(this.bodyVisual)
         {
