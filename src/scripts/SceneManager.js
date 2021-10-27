@@ -69,6 +69,7 @@ export class SceneManager {
 
     removeImageAbove()
     {
+        return;
         if(this.aboveBackground)
         {
             this.aboveBackground.container.destroy();

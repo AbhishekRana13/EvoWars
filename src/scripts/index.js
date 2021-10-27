@@ -26,4 +26,4 @@ Globals.stats.domElement.style.cssText = "position:absolute;top:25px;left: 125px
 
 Globals.App = new App();
 Globals.App.run();
-Globals.App.addOrientationCheck();
+//Globals.App.addOrientationCheck();

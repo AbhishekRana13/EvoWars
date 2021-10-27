@@ -102,20 +102,20 @@ export class App {
         this.loader.preloadSounds();
     }
 
-    addOrientationCheck()
-    {
-        if(PIXI.utils.isMobile.any)
-        {
+    // addOrientationCheck()
+    // {
+    //     if(PIXI.utils.isMobile.any)
+    //     {
 
-            window.addEventListener("orientationchange", function() {
-                if (window.orientation == 90 || window.orientation == -90) {
-                    Globals.scene.drawImageAbove();
-                } else {
-                    Globals.scene.removeImageAbove();
-                }
-                });
-        }
+    //         window.addEventListener("orientationchange", function() {
+    //             if (window.orientation == 90 || window.orientation == -90) {
+    //                 Globals.scene.drawImageAbove();
+    //             } else {
+    //                 Globals.scene.removeImageAbove();
+    //             }
+    //             });
+    //     }
         
-    }
+    // }
 
 }
