@@ -289,7 +289,7 @@ export class GameScene
 
         if(Globals.isMobile)
         {
-            Globals.xpBar.y = Globals.xpBar.height/2;
+            Globals.xpBar.y = Globals.xpBar.height;
         } else
         {
             Globals.xpBar.y = config.logicalHeight - Globals.xpBar.height/2;

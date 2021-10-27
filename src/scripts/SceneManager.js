@@ -60,6 +60,7 @@ export class SceneManager {
 
     drawImageAbove()
     {
+        return;
         this.aboveBackground = new Background(Globals.resources.cover.texture,Globals.resources.cover.texture);
         this.labelText = new DebugText("Move Back To Portrait Mode", window.innerWidth/2, window.innerHeight/2, "#FFF");
         this.container.addChild(this.aboveBackground.container);

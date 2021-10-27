@@ -21,6 +21,8 @@ export class App {
 
         CalculateScaleFactor();
 
+     
+
         this.app.renderer.view.style.width = `${window.innerWidth}px`;
 		this.app.renderer.view.style.height = `${window.innerHeight}px`;
 		this.app.renderer.resize(window.innerWidth, window.innerHeight);
@@ -94,7 +96,6 @@ export class App {
         });
 
         this.loader.preloadSounds();
-        
     }
 
     addOrientationCheck()
