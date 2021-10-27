@@ -4,6 +4,7 @@ import { clamp, fetchGlobalPosition, getAngleBetween, getAngleInRadian, getDirec
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { config } from './appConfig';
+import { Label } from './LabelScore';
 export class Entity extends PIXI.Container
 {
     constructor(parentContainer, world)
@@ -31,6 +32,8 @@ export class Entity extends PIXI.Container
         
         this.currentDirection = this.direction;
 
+        this.isInBoostedMode = false;
+        this.waitTime = 0;
 
 
         setInterval(() => {
@@ -54,6 +57,11 @@ export class Entity extends PIXI.Container
             y : 2,
             reward : 30
         }
+
+        this.xpText = new Label(this.visual.x, this.visual.y, 0.5, this.stats.xp, 56);
+        this.xpText.style.fontWeight = "bold";
+
+        this.addChild(this.xpText);
     }
 
     sizeReset()
@@ -78,7 +86,7 @@ export class Entity extends PIXI.Container
         if(this.stats.xp > this.stats.xpMax)
         {
             const remainingXp = this.stats.xp - this.stats.xpMax;
-            this.level++;
+            this.stats.level++;
             
             this.stats.xpMax = Math.pow((this.stats.level / this.stats.x), this.stats.y);
 
@@ -88,9 +96,47 @@ export class Entity extends PIXI.Container
         }
     }
 
-    upScale()
+    depleteXP(value)
+    {   
+        this.stats.xp -= value;
+        this.stats.reward -= value;
+        
+        if(this.stats.xp < 0 && this.stats.level == 1)
+        {
+            this.stats.xp = 0;
+            this.stats.reward = 20;
+           return;
+        }
+
+        if(this.stats.xp < 0)
+        {
+            
+            this.stats.level--;
+            this.stats.xpMax = Math.pow((this.stats.level / this.stats.x), this.stats.y);
+            
+            const remainingXp = this.stats.xpMax - this.stats.xp;
+            this.stats.xp = remainingXp;
+            console.log("Depleted");
+
+            this.upScale(true);
+        }
+    }
+
+    upScale(toDeplete = false)
     {
-        this.scaleValue *= 1.2;
+
+        if(toDeplete)
+        {
+            this.scaleValue /= 1.2;
+        } else
+        {
+            this.scaleValue *= 1.2;
+        }
+           
+
+            
+
+
         this.scale.set(this.scaleValue);
         this.body.shapes[0].radius = this.globalWidth/2;
 
@@ -251,7 +297,21 @@ export class Entity extends PIXI.Container
 
     update(dt)
     {
-        
+        this.xpText.text = Math.round(this.stats.xp)
+
+        let speed = this.isInBoostedMode ? gameSettings.boostedSpeed : gameSettings.speed;
+
+        if(this.isInBoostedMode)
+        {
+            if((this.stats.level > 1 || this.stats.xp > 0 ))
+            {
+                this.depleteXP(gameSettings.depleteValue);
+            } else
+            {
+                speed = gameSettings.speed;
+            }
+        }
+
         //Update Sword
         const position = fetchGlobalPosition(this.sword);
         this.sBody.position = [position.x, position.y];
@@ -262,8 +322,8 @@ export class Entity extends PIXI.Container
         //return;
         this.body.angle = getAngleInRadian({x : 0, y : -1}, this.currentDirection);
         
-        this.offsetX += this.currentDirection.x * dt * 5;
-        this.offsetY += this.currentDirection.y * dt * 5;
+        this.offsetX += this.currentDirection.x * dt * speed;
+        this.offsetY += this.currentDirection.y * dt * speed;
         const width = this.visual.width * this.scale.x;
         const height = this.visual.height * this.scale.y;
         this.offsetX = clamp(this.offsetX, -this.backgroundContainer.width/2 + width, this.backgroundContainer.width/2 - width);
@@ -295,6 +355,16 @@ export class Entity extends PIXI.Container
         }
 
         this.CheckEnemyHit();
+
+        if(this.waitTime > 0)
+        {
+            this.waitTime -= dt;
+
+           
+        } else if(this.isInBoostedMode)
+        {
+            this.isInBoostedMode = true;
+        }
     }
 
     updateBodyVisual(dt)
@@ -345,10 +415,22 @@ export class Entity extends PIXI.Container
 
         const direction = getDirectionBetween(ownPos, targetPos);
 
+        if(!this.isInBoostedMode || this.waitTime <= 0 )
+        {
+            if(Math.random() > 0.5)
+            {
+                this.isInBoostedMode = true;
+                this.waitTime = (Math.random() * 3) + 1;
+            } 
+        }
+
+        
+
         if(getMagnitude(direction) > ((this.body.shapes[0].radius * 4) +  this.followTarget.body.shapes[0].radius))
         {
             this.followTarget = null;
             this.dirToMove = 1;
+            this.isInBoostedMode = false;
             return;
         } else if(getMagnitude(direction) < (this.body.shapes[0].radius + this.followTarget.body.shapes[0].radius))
         {
@@ -450,7 +532,7 @@ export class Entity extends PIXI.Container
 
                         Globals.world.removeBody(this.followTarget.sightBody);
 
-
+                        console.log(this.followTarget.stats.reward);
                         this.updateXP(this.followTarget.stats.reward);
                         this.followTarget.destroy();
                         Globals.entities.splice(Globals.entities.indexOf(this.followTarget), 1);

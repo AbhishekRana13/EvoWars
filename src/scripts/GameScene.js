@@ -276,8 +276,8 @@ export class GameScene
             Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
         }, this);
         
-        PlayerStats.onLevelUpdate = () => {
-            this.heroContainer.scaleUP();
+        PlayerStats.onLevelUpdate = (value) => {
+            this.heroContainer.scaleUP(value);
             
         };
     }
@@ -439,6 +439,19 @@ export class GameScene
         if(dir != null)
         {
             this.heroContainer.body.angle = getAngleInRadian({x: 0, y : -1}, dir);
+
+            if(this.currentSpeed == gameSettings.boostedSpeed)
+            {
+                if((PlayerStats.level > 1 || PlayerStats.xp > 0 ))
+                {
+                    PlayerStats.depleteXP(gameSettings.depleteValue);
+                    Globals.xpBar.updateProgress(PlayerStats.xp/PlayerStats.xpMax);
+                } else
+                {
+                    this.currentSpeed = gameSettings.speed;
+                }
+                
+            } 
 
             this.backgroundContainer.x -= dir.x *this.currentSpeed*dt;
             this.backgroundContainer.y -= dir.y *this.currentSpeed*dt;

@@ -30,9 +30,18 @@ export class Hero extends PIXI.Container
         //console.log(this.body.shapes[0]);
     }
 
-    scaleUP()
+    scaleUP(isDepleted = false)
     {
-        this.scaleValue *= 1.2;
+
+        if(isDepleted)
+        {
+            this.scaleValue /= 1.2;
+        } else
+        {
+            this.scaleValue *= 1.2;
+        }
+
+        
 
         this.sizeReset(false);
     }

@@ -21,7 +21,8 @@ export const gameSettings = {
         HERO : 8,
         ENTITY : 16,
         SIGHT : 32
-    }
+    },
+    depleteValue : 1
 };
 
 export const PlayerStats = {
@@ -44,6 +45,33 @@ export const PlayerStats = {
 
             if(this.onLevelUpdate != null)
                 this.onLevelUpdate();
+        }
+    },
+    depleteXP(value)
+    {   
+        this.xp -= value;
+        this.reward -= value;
+        
+        if(this.xp < 0 && this.level == 1)
+        {
+            this.xp = 0;
+            this.reward = 20;
+            return;
+        }
+
+        if(this.xp < 0)
+        {
+          
+            this.level--;
+            this.xpMax = Math.pow((this.level / this.x), this.y);
+            
+            const remainingXp = this.xpMax + this.xp;
+            this.xp = remainingXp;
+
+            if(this.onLevelUpdate != null)
+                this.onLevelUpdate(true);
+
+            
         }
     },
     onLevelUpdate : null,
