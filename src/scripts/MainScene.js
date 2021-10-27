@@ -6,6 +6,7 @@ import * as PIXIINPUT from "pixi-text-input";
 import { GameScene } from './GameScene';
 import { Label } from './LabelScore';
 
+
 export class MainScene
 {
     constructor()

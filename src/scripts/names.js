@@ -1,4 +1,4 @@
-[
+export const nameData = [
     "Meta Knight",
     "League of Legends",
     "Cherry",

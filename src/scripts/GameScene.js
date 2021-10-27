@@ -14,7 +14,7 @@ import { XPBar } from './XPBar';
 import { CollectibleManager } from './CollectibleManager';
 import { Label } from './LabelScore';
 import { PromptMessage } from './PromptMessage';
-import * as nameData from './names.json';
+import { nameData } from './names';
 
 export class GameScene
 {
