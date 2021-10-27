@@ -6,7 +6,7 @@ import { Background } from './Background';
 import { Entity } from './Entity';
 import { disposeData, gameSettings, Globals, PlayerStats } from './Globals';
 import { Hero } from './Hero';
-import { clamp, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
+import { clamp, fetchGlobalPosition, getAngleBetween, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, getPointOnCircle, normalize } from './Utilities';
 import * as P2 from './p2';
 import { DebugCircle } from './DebugCircle';
 import { DebugText } from './DebugText';
@@ -538,21 +538,23 @@ export class GameScene
         analogOuterCircle.on("touchstart", (e) => {
             
             this.analogPointerID = e.data.identifier;
-            this.startPoint = e.data.global;
+            this.startPoint = fetchGlobalPosition(analogOuterCircle);
             this.hasMobileInputPressed = true;
         }, this);
 
         analogOuterCircle.on("touchmove", (e) => {
             if(this.hasMobileInputPressed && this.analogPointerID == e.data.identifier)
             {
-                const point = new PIXI.Point(e.data.global.x - this.mobileContainer.x, e.data.global.y - this.mobileContainer.y);
+                const point = new PIXI.Point(e.data.global.x, e.data.global.y);
                 
-                const direction = getDirectionBetween(analogPoint, point);
+                const direction = getDirectionBetween(this.startPoint, point);
                 this.mobileDir = normalize(direction);
-                if(getMagnitude(direction) < radius)
+                console.log(this.mobileDir);
+                const mag = getMagnitude(direction);
+                if(mag < radius)
                 {
-                    this.analogInnerCircle.x = point.x;
-                    this.analogInnerCircle.y = point.y;
+                    this.analogInnerCircle.x = analogPoint.x + (this.mobileDir.x * radius) * mag/radius;
+                    this.analogInnerCircle.y = analogPoint.y + (this.mobileDir.y * radius) * mag/radius;
                 } else
                 {
                     

@@ -67,7 +67,8 @@ export class App {
         };
 
         this.app.view.ontouchend = (e) => {
-            Globals.emitter.Call("touchEnd", {identifier : e.data.identifier});
+          //  console.log(e);
+            Globals.emitter.Call("touchEnd", {identifier : e.changedTouches[0].identifier});
         };
         
        
