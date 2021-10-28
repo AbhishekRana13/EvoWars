@@ -152,11 +152,19 @@ export class Entity extends PIXI.Container
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
 
         this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 4;
+
+        this.visual.gotoAndStop(this.stats.level <= 10 ? this.stats.level - 1 : 9);
+        this.sword.gotoAndStop(this.stats.level <= 5 ? this.stats.level - 1 : 5);
     }
 
     createEntityVisual()
     {
-        this.visual = new PIXI.Sprite(Globals.resources.entity.texture);
+        const tiles = [];
+        for(let i = 1 ; i <= 10; i++)
+        {
+            tiles.push(Globals.resources["hero"+i].texture);
+        }
+        this.visual = new PIXI.AnimatedSprite(tiles);
         this.visual.anchor.set(0.5);
 
         this.addChild(this.visual);
@@ -235,7 +243,14 @@ export class Entity extends PIXI.Container
 
     createSword(world)
     {
-        this.sword = new PIXI.Sprite(Globals.resources.sword.texture);
+        const textures = [];
+
+        for(let i = 1; i <= 5; i++)
+        {
+            textures.push(Globals.resources['sword'+i].texture);
+        }
+
+        this.sword = new PIXI.AnimatedSprite(textures);
         this.sword.scale.set(0.8);
         this.sword.anchor.set(0.5, 1);
 

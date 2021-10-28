@@ -43,7 +43,8 @@ export class Hero extends PIXI.Container
             this.scaleValue *= 1.2;
         }
 
-        
+        this.visual.gotoAndStop(PlayerStats.level <= 10 ? PlayerStats.level - 1 : 9);
+        this.sword.gotoAndStop(PlayerStats.level <= 5 ? PlayerStats.level - 1 : 5)
 
         this.sizeReset(false);
     }
@@ -75,7 +76,14 @@ export class Hero extends PIXI.Container
 
     createHeroVisual()
     {
-        this.visual = new PIXI.Sprite(Globals.resources.hero.texture);
+        const tiles = [];
+        for(let i = 1 ; i <= 10; i++)
+        {
+            tiles.push(Globals.resources["hero"+i].texture);
+        }
+        this.visual = new PIXI.AnimatedSprite(tiles);
+
+        
         this.visual.anchor.set(0.5);
         this.addChild(this.visual);
     }
@@ -126,9 +134,18 @@ export class Hero extends PIXI.Container
 
     createSword(world)
     {
-        this.sword = new PIXI.Sprite(Globals.resources.sword.texture);
+
+        const textures = [];
+
+        for(let i = 1; i <= 5; i++)
+        {
+            textures.push(Globals.resources['sword'+i].texture);
+        }
+
+        this.sword = new PIXI.AnimatedSprite(textures);
         this.sword.scale.set(0.8);
         this.sword.anchor.set(0.5, 1);
+
 
         this.sword.x -= this.visual.width * 0.8;
         this.sword.angle = -20;
