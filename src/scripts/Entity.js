@@ -266,6 +266,7 @@ export class Entity extends PIXI.Container
             fixedRotation : true
         });
 
+        this.lastAngle = this.body.angle;
         
         //console.log(parentContainer.width, parentContainer.height)
        // console.log(this.offsetX, this.offsetY);
@@ -439,16 +440,25 @@ export class Entity extends PIXI.Container
 
     syncBodyAndVisual(dt, speed)
     {
-        //this.currentDirection = new PIXI.Point(1, 0);
+        //this.currentDirection = new PIXI.Point(0, 0);
+        
         
         if(this.currentDirection.x == 0 && this.currentDirection.y == 0)
         {
-          //  this.body.angle = 0;
+          //  this.body.angle = getAngleInRadian({x : 0, y : -1}, this.currentDirection);
+
         } else
         {
             this.body.angle = getAngleInRadian({x : 0, y : -1}, this.currentDirection);
+            
+        }
+
+        if(isNaN(this.body.angle))
+        {
+            this.body.angle = this.lastAngle;
         }
         
+        this.lastAngle = this.body.angle;
         this.offsetX += this.currentDirection.x * dt * speed;
         this.offsetY += this.currentDirection.y * dt * speed;
         
