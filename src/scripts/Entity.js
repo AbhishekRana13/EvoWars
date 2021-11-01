@@ -441,13 +441,13 @@ export class Entity extends PIXI.Container
     {
         //this.currentDirection = new PIXI.Point(1, 0);
         
-        // if(this.currentDirection.x == 0 && this.currentDirection.y == 0)
-        // {
-        //     this.body.angle = 0;
-        // } else
-        // {
-        //     this.body.angle = getAngleInRadian({x : 0, y : -1}, this.currentDirection);
-        // }
+        if(this.currentDirection.x == 0 && this.currentDirection.y == 0)
+        {
+          //  this.body.angle = 0;
+        } else
+        {
+            this.body.angle = getAngleInRadian({x : 0, y : -1}, this.currentDirection);
+        }
         
         this.offsetX += this.currentDirection.x * dt * speed;
         this.offsetY += this.currentDirection.y * dt * speed;

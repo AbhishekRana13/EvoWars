@@ -71,8 +71,8 @@ export class GameScene
         
        // this.uiContainer.addChild(debugBG2);
         
-        this.createEntities(20);
-        this.createCollectibles(10);
+        this.createEntities(10);
+        this.createCollectibles(50);
 
 
         setInterval(() => {
