@@ -138,7 +138,7 @@ export class AttackState extends States
         } else if (getMagnitude(direction) <= this.entity.swingSwordRange)
         {
             this.entity.readyToSwing = true;
-            return new PIXI.Point();
+           // return new PIXI.Point();
         } 
         
 

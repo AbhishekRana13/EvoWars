@@ -95,7 +95,7 @@ export class Entity extends PIXI.Container
         });
 
         this.states.ATTACK.addTransition(this.states.ESCAPE, () => {
-            return (this.followTarget != null && (this.noOfAttempts > 3 || this.followTarget.level > this.level)  && this.checkRandomValue(0.4));
+            return (this.followTarget != null && this.followTarget.level > this.level  && this.checkRandomValue(0.4));
         });
 
         this.states.ESCAPE.addTransition(this.states.COLLECT, () => {
