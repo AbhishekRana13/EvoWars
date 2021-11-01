@@ -83,11 +83,11 @@ export class Entity extends PIXI.Container
 
 
         this.states.COLLECT.addTransition(this.states.ATTACK, () => {
-            return this.followTarget != null  && this.checkRandomValue;
+            return this.followTarget != null  && this.checkRandomValue(0.2);
         });
 
         this.states.COLLECT.addTransition(this.states.ESCAPE, () => {
-            return (this.followTarget != null && this.followTarget.level > this.level && this.checkRandomValue);
+            return (this.followTarget != null && this.followTarget.level > this.level && this.checkRandomValue(0.5));
         });
 
         this.states.ATTACK.addTransition(this.states.COLLECT, () => {
@@ -95,7 +95,7 @@ export class Entity extends PIXI.Container
         });
 
         this.states.ATTACK.addTransition(this.states.ESCAPE, () => {
-            return (this.followTarget != null && (this.noOfAttempts > 3 || this.followTarget.level > this.level)  && this.checkRandomValue);
+            return (this.followTarget != null && (this.noOfAttempts > 3 || this.followTarget.level > this.level)  && this.checkRandomValue(0.4));
         });
 
         this.states.ESCAPE.addTransition(this.states.COLLECT, () => {
@@ -108,11 +108,11 @@ export class Entity extends PIXI.Container
 
     }
 
-    get checkRandomValue()
+    checkRandomValue(valueToCompare)
     {
         const randomValue = Math.random();
 
-        return randomValue > 0.5;
+        return randomValue > valueToCompare;
     }
 
     switchState(state)
