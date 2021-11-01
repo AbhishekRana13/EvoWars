@@ -54,8 +54,8 @@ export const CalculateScaleFactor = () => {
     config.scaleFactor = maxScaleFactor;
     config.minScaleFactor = minScaleFactor;
 
-    console.log(config.leftX, config.rightX);
-    console.log(window.innerWidth + "x" + window.innerHeight);
-    console.log(config.scaleFactor);
-    console.log(config.minScaleFactor);
+    // console.log(config.leftX, config.rightX);
+    // console.log(window.innerWidth + "x" + window.innerHeight);
+    // console.log(config.scaleFactor);
+    // console.log(config.minScaleFactor);
 };

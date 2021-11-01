@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { config } from "./appConfig";
 import { Background } from './Background';
-import { Globals } from './Globals';
+import { disposeData, Globals, PlayerStats } from './Globals';
 import * as PIXIINPUT from "pixi-text-input";
 import { GameScene } from './GameScene';
 import { Label } from './LabelScore';
@@ -11,6 +11,11 @@ export class MainScene
 {
     constructor()
     {
+
+        globalThis.consoleEntity = (index) => Globals.entities[index];
+
+        this.resetAllGlobals();
+
         this.sceneContainer = new PIXI.Container();
 
         this.container = new PIXI.Container();
@@ -39,7 +44,7 @@ export class MainScene
             }
         });
 
-        console.log(input);
+       // console.log(input);
         input._placeholder = "Enter Username";
         input.x = config.logicalWidth/2 - input.width/2;
         input.y = config.logicalHeight/2 - input.height/2;
@@ -76,7 +81,10 @@ export class MainScene
         this.container.addChild(label);
         
         
-        globalThis.logInput = () => console.log(input.text);
+       // globalThis.logInput = () => console.log(input.text);
+
+     //  Globals.scene.start(new GameScene());
+
     }
 
 
@@ -88,6 +96,18 @@ export class MainScene
         this.container.scale.set(config.scaleFactor);
         this.container.x = config.leftX;
         this.container.y = config.topY;
+    }
+
+    resetAllGlobals()
+    {
+        Globals.world = null;
+        Globals.entities = {};
+        Globals.heroName = "";
+
+        PlayerStats.reset();
+
+        disposeData.debugGraphic = [];
+        disposeData.containers = [];
     }
 
 

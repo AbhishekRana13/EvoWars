@@ -4,7 +4,7 @@ import { disposeData, gameSettings, Globals, PlayerStats } from './Globals';
 import TWEEN, { Easing } from "@tweenjs/tween.js";
 import * as P2 from "./p2";
 import { DebugCircle } from './DebugCircle';
-import { fetchGlobalPosition, getDirectionBetween, getMagnitude, getMousePosition, normalize } from './Utilities';
+import { fetchGlobalPosition, getAngleInRadian, getDirectionBetween, getMagnitude, getMousePosition, normalize } from './Utilities';
 import { Label } from './LabelScore';
 
 export class Hero extends PIXI.Container
@@ -30,6 +30,8 @@ export class Hero extends PIXI.Container
         this.nameText = new Label(this.visual.x, 0 - this.globalRadius, 0.5, name, 28, 0x3c3c3c);
         this.nameText.anchor.set(0.5, 0);
         //console.log(this.body.shapes[0]);
+
+        this.uuid = PIXI.utils.uid;
     }
 
     scaleUP(isDepleted = false)
@@ -103,12 +105,14 @@ export class Hero extends PIXI.Container
             fixedRotation : true
         });
 
+        this.body.parentContainer = this;
+
         const circleShape = new P2.Circle({
             radius : (this.globalWidth/2),
            sensor : true
         });
 
-         circleShape.group = gameSettings.CollisionGroups.HERO;
+        circleShape.group = gameSettings.CollisionGroups.HERO;
 
         this.body.addShape(circleShape);
         
@@ -117,6 +121,8 @@ export class Hero extends PIXI.Container
         //this.addBodyVisualisation(this.circleShape);
 
         console.log(circleShape);
+
+        Globals.heroBody = this.body;
     }
 
     addBodyVisualisation(circleShape)
@@ -176,7 +182,7 @@ export class Hero extends PIXI.Container
 
         this.sBody.addShape(rectShape);
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
-        console.log(this.sBody.shapes[0].position);
+      //  console.log(this.sBody.shapes[0].position);
         world.addBody(this.sBody);
         
 
@@ -256,38 +262,28 @@ export class Hero extends PIXI.Container
         return (getMagnitude(direction) > widthToCompare) ? normalize(direction) : null;
     }
 
+    get level()
+    {
+        return PlayerStats.level;
+    }
+
     CheckEnemyHit()
     {
         if(this.checkHit)
         {
-            for (let i = Globals.entities.length-1; i >= 0; i--) {
-                const entity = Globals.entities[i];
+            const keys = Object.keys(Globals.entities);
+
+            for (let i = keys.length-1; i >= 0; i--) {    
+                const entity = Globals.entities[keys[i]];
                 
                 if(this.sBody.overlaps(entity.body))
                 {
-                    console.log("OVERLAPED");
+                //    console.log("Hero overlaped with ", entity);
                    
-
-
-                    if(entity.body.isDebug)
-                    {
-                        disposeData.debugGraphic.push(entity.body.graphic);
-                    }
-
-                    if(entity.sBody.isDebug)
-                    {
-                        disposeData.debugGraphic.push(entity.sBody.graphic);
-                    }
-
-                    Globals.world.removeBody(entity.body);
-                    Globals.world.removeBody(entity.sBody);
+                    entity.removeBodyData();
                     
-                    PlayerStats.updateXP(entity.stats.reward);
-                    entity.destroy();
-                    entity.nameText?.destroy();
-                    Globals.entities.splice(i, 1);
-
-                    
+                    PlayerStats.updateXP(entity.reward);
+                    entity.destroyObj();          
                     this.emit("xpUpdated");
                 }
             }
@@ -325,6 +321,10 @@ export class Hero extends PIXI.Container
         this.x = (this.body.position[0]- config.leftX) / config.scaleFactor;
         this.y = (this.body.position[1]- config.topY) / config.scaleFactor;
 
+
+      
+
+
         this.rotation = this.body.angle;
 
         this.nameText.x = this.x;
@@ -345,5 +345,29 @@ export class Hero extends PIXI.Container
 
     }
 
-    
+    removeBodyData()
+    {
+        if(this.body.isDebug)
+        {
+            disposeData.debugGraphic.push(this.body.graphic);
+        }
+
+        if(this.sBody.isDebug)
+        {
+            disposeData.debugGraphic.push(this.sBody.graphic);
+        }
+
+        Globals.world.removeBody(this.body);
+        Globals.world.removeBody(this.sBody);
+    }
+
+    destroyObj()
+    {
+        disposeData.containers.push(this);
+    }
+
+    get reward()
+    {
+        return PlayerStats.reward;
+    }
 }

@@ -8,7 +8,7 @@ export const Globals = {
       //  return true;
         return PIXI.utils.isMobile.any;
     },
-    entities : [],
+    entities : {},
     heroName : "Abhi"
 };
 
@@ -25,6 +25,8 @@ export const gameSettings = {
     },
     depleteValue : 1
 };
+
+
 
 export const PlayerStats = {
     level : 1,
@@ -76,7 +78,13 @@ export const PlayerStats = {
         }
     },
     onLevelUpdate : null,
-    reward : 20
+    reward : 20,
+    reset()
+    {
+        this.xp = 0;
+        this.xpMax = 204.0816327,
+        this.level = 1
+    }
 };
 
 export const disposeData = {

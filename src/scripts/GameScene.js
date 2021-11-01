@@ -76,7 +76,7 @@ export class GameScene
 
 
         setInterval(() => {
-            if(Globals.entities.length < 30)
+            if(Object.keys(Globals.entities).length < 30)
                 this.createEntities(5);
             if(this.collectibleManager.collectibles.length < 50)
                 this.createCollectibles(5);
@@ -149,8 +149,8 @@ export class GameScene
 
 
 
-        Globals.entities.forEach(entity => {
-            entity.sizeReset();
+        Object.keys(Globals.entities).forEach(key => {
+            Globals.entities[key].sizeReset();
         });
 
         this.collectibleManager.resize();
@@ -197,6 +197,7 @@ export class GameScene
     {
         Globals.world.on("beginContact", (evt) => {
     
+
             if((evt.shapeA.group == gameSettings.CollisionGroups.HERO && evt.shapeB.group == gameSettings.CollisionGroups.COLLECTIBLE) ||
                 (evt.shapeB.group == gameSettings.CollisionGroups.HERO && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
             {
@@ -205,6 +206,8 @@ export class GameScene
             (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
             {
                 this.collectCollectible(evt.bodyA, evt.bodyB);
+               
+
             } else if((evt.shapeA.group == gameSettings.CollisionGroups.ENTITY && evt.shapeB.group == gameSettings.CollisionGroups.SIGHT)||
                         (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.SIGHT))
             {
@@ -212,17 +215,23 @@ export class GameScene
                 const body1 = evt.bodyA;
                 const body2 = evt.bodyB; 
                 
+
+                console.log("OverLaped");
+
                 if(body1.parentEntity == body2.parentEntity) return;
+
                 const sightBody = (body1.shapes[0].group == gameSettings.CollisionGroups.SIGHT) ? body1 : body2;
                 const entityBody = (body1.shapes[0].group == gameSettings.CollisionGroups.SIGHT) ? body2 : body1;
 
                 sightBody.parentEntity.checkNearbyTarget(entityBody);
                 
-            }
-
+            } 
 
             
+            
         }, this);
+
+        
     }
 
     collectCollectible(body1, body2)
@@ -271,7 +280,7 @@ export class GameScene
        // this.sceneContainer.addChild(this.heroContainer.sBodyVisual);
 
        this.heroContainer.on("destroyed", () => {
-           console.log("DESTROYED")
+           //console.log("DESTROYED")
             this.heroContainer = null;
        }, this);
         
@@ -302,17 +311,15 @@ export class GameScene
 
     createEntities(noOfEntities)
     {
-        if(Globals.entities == undefined)
-            Globals.entities = [];
-
         for (let i = 0; i < noOfEntities; i++) {
             const index = Math.floor(Math.random() * nameData.length);
 
             const entity = new Entity(this.backgroundContainer, Globals.world, nameData.at(index));
-           // this.sceneContainer.addChild(entity.bodyVisual);
+          
+            
             this.container.addChild(entity);
             this.container.addChild(entity.nameText);
-            Globals.entities.push(entity);
+            
 
 
             
@@ -343,7 +350,7 @@ export class GameScene
         
         if(this.heroContainer != undefined && this.heroContainer != null)
         {
-            global.heroCast = () => console.log(this.heroContainer);
+           // global.heroCast = () => console.log(this.heroContainer);
 
                        
             if(this.currentSpeed == gameSettings.boostedSpeed)
@@ -359,6 +366,8 @@ export class GameScene
                 
             } 
 
+            // this.currentSpeed = 0;
+
             if(Globals.isMobile)
                 this.updateWithAnalog(dt);
             else
@@ -371,18 +380,17 @@ export class GameScene
         }
         
 
-        Globals.entities.forEach(entity => {
+        Object.keys(Globals.entities).forEach(key => {
+            const entity = Globals.entities[key];    
             entity?.update(dt);
             entity?.checkDistanceFromHero(this.heroContainer);
-            
-            
         });
 
        this.collectibleManager.update(this.heroContainer, dt);
 
 
 
-       this.counterText.text = "Enemies Counter : "+ ((Globals.entities == undefined) ? 0 : Globals.entities.length);
+       this.counterText.text = "Enemies Counter : "+ ((Globals.entities == undefined) ? 0 : Object.keys(Globals.entities).length);
     
        this.collectibleCounter.text = "Collectibles : "+ ((this.collectibleManager == undefined) ? 0 : this.collectibleManager.collectibles.length);
 
@@ -453,14 +461,14 @@ export class GameScene
             const element = disposeData.debugGraphic[i];
             disposeData.debugGraphic.splice(i, 1);
 
-            element.destroy();
+            element?.destroy();
         }
 
     }
 
     updateWithMouse(dt)
     {
-        console.log(this.backgroundContainer.width);
+        //console.log(this.backgroundContainer.width);
         const dir = this.heroContainer.getMouseDirection;
         
         if(dir != null)
@@ -564,7 +572,7 @@ export class GameScene
             this.mobileDir = new PIXI.Point(0, 0);
         };
 
-        console.log(this.mobileContainer);
+      //  console.log(this.mobileContainer);
         this.analogPointerID = -1;
         analogOuterCircle.on("touchstart", (e) => {
             
@@ -580,7 +588,7 @@ export class GameScene
                 
                 const direction = getDirectionBetween(this.startPoint, point);
                 this.mobileDir = normalize(direction);
-                console.log(this.mobileDir);
+              //  console.log(this.mobileDir);
                 const mag = getMagnitude(direction);
                 if(mag < radius)
                 {
@@ -627,7 +635,7 @@ export class GameScene
         boostBtn.on("touchstart",(e) => {
                 this.boostBtnID = e.data.identifier;
                 this.currentSpeed = gameSettings.boostedSpeed;
-                console.log(e)
+                //console.log(e)
                 text.text = e.data.identifier;
         }, this);
 
@@ -643,7 +651,7 @@ export class GameScene
 
         this.mobileContainer.addChild(boostBtn);
         this.mobileContainer.addChild(boostBtnText);
-        console.log(boostBtnText)
+    //    console.log(boostBtnText)
 
         //Fire Button
         const swingBtn = new PIXI.Graphics();
@@ -659,7 +667,7 @@ export class GameScene
         swingBtnText.style.fontWeight = "bold";
        
         swingBtn.on("touchstart",(e) => {
-            console.log(e);
+        //    console.log(e);
             this.heroContainer.swingSword();
         }, this);
 

@@ -77,7 +77,7 @@ export class XPBar extends PIXI.Container
         
 
         const duration = Math.abs(progressRatio - this.lastProgress.x) * this.timeToFillBar;
-        console.log("Duration : " + duration);
+        //console.log("Duration : " + duration);
 
         this.progressTween = new TWEEN.Tween(this.lastProgress)
             .to({x : progressRatio}, duration)
