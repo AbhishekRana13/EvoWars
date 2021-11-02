@@ -8,7 +8,7 @@ import { Label } from './LabelScore';
 import { AttackState, CollectState, EscapeState } from './States/aiStates';
 export class Entity extends PIXI.Container
 {
-    constructor(parentContainer, world, name)
+    constructor(parentContainer, world, name, level)
     {
         super();
         
@@ -38,13 +38,21 @@ export class Entity extends PIXI.Container
 
 
         this.stats = {
-            level : 1,
+            level : level,
             xp : 0,
             xpMax : 10,
             x : 0.07,
             y : 2,
             reward : 30
         }
+
+        for(let i = 1; i < this.stats.level; i++)
+        {
+            this.upScale();
+        }
+
+        this.stats.xpMax = Math.pow((this.stats.level / this.stats.x), this.stats.y);
+        this.stats.xp = 0;
 
         this.xpText = new Label(this.visual.x, this.visual.y, 0.5, this.stats.xp, 56);
         this.xpText.style.fontWeight = "bold";
@@ -86,13 +94,12 @@ export class Entity extends PIXI.Container
 
         this.anyTransitions = [];
 
-
-        this.states.COLLECT.addTransition(this.states.ATTACK, () => {
-            return this.followTarget != null  && this.checkRandomValue(0.2);
-        });
-
         this.states.COLLECT.addTransition(this.states.ESCAPE, () => {
             return (this.followTarget != null && this.followTarget.level >= this.level && this.checkRandomValue(0.5));
+        });
+
+        this.states.COLLECT.addTransition(this.states.ATTACK, () => {
+            return this.followTarget != null//  && this.checkRandomValue(0.2);
         });
 
         this.states.ATTACK.addTransition(this.states.COLLECT, () => {
@@ -166,7 +173,7 @@ export class Entity extends PIXI.Container
 
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
 
-        this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 4;
+        this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 5;
     }
 
     updateXP(value)
@@ -224,8 +231,9 @@ export class Entity extends PIXI.Container
         }
            
 
-            
-
+        
+        if(this == null)
+            return;
 
         this.scale.set(this.scaleValue);
         this.body.shapes[0].radius = this.globalWidth/2;
@@ -235,7 +243,7 @@ export class Entity extends PIXI.Container
 
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
 
-        this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 4;
+        this.sightBody.shapes[0].radius = this.body.shapes[0].radius * 5;
 
         this.visual.gotoAndStop(this.stats.level <= 10 ? this.stats.level - 1 : 9);
         this.sword.gotoAndStop(this.stats.level <= 5 ? this.stats.level - 1 : 5);
@@ -626,7 +634,7 @@ export class Entity extends PIXI.Container
 
     get swingSwordRange()
     {
-        return (this.body.shapes[0].radius + this.followTarget.body.shapes[0].radius);
+        return ((this.body.shapes[0].radius) * 2 + this.followTarget.body.shapes[0].radius);
     }
 
 

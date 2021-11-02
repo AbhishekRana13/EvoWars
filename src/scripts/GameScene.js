@@ -51,7 +51,7 @@ export class GameScene
         this.sceneContainer.addChild(this.uiContainer);
        
 
-        this.createWorld(4);
+        this.createWorld(3);
 
         
         this.createHeroContainer();
@@ -220,7 +220,7 @@ export class GameScene
             } else if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.SWORD, gameSettings.CollisionGroups.HERO))
             {
                 const bodies = this.getBodyByType(evt, gameSettings.CollisionGroups.SWORD);
-               // console.log(bodies.bodyA, bodies.bodyB);
+                console.log(bodies.bodyA.parentEntity.uuid, "Killed HERO");
                 if(bodies.bodyA.isActive)
                 {
                     bodies.bodyA.parentEntity.enemyGotHit(bodies.bodyB);
@@ -362,8 +362,10 @@ export class GameScene
     {
         for (let i = 0; i < noOfEntities; i++) {
             const index = Math.floor(Math.random() * nameData.length);
+            const level = Math.floor(Math.random() * 5);
 
-            const entity = new Entity(this.backgroundContainer, Globals.world, nameData.at(index));
+
+            const entity = new Entity(this.backgroundContainer, Globals.world, nameData.at(index), level);
           
             
             this.container.addChild(entity);

@@ -268,7 +268,7 @@ export class Hero extends PIXI.Container
             for (let i = keys.length-1; i >= 0; i--) {    
                 const entity = Globals.entities[keys[i]];
                 
-                if(this.sBody.overlaps(entity.body))
+                if(entity?.body != null && this.sBody?.overlaps(entity.body))
                 {
                 //    console.log("Hero overlaped with ", entity);
                    
