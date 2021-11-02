@@ -32,6 +32,8 @@ export class Hero extends PIXI.Container
         //console.log(this.body.shapes[0]);
 
         this.uuid = PIXI.utils.uid;
+
+        this.isActive = true;
     }
 
     scaleUP(isDepleted = false)
@@ -261,6 +263,8 @@ export class Hero extends PIXI.Container
 
     CheckEnemyHit()
     {
+        if(!this.isActive) return;
+
         if(this.checkHit)
         {
             const keys = Object.keys(Globals.entities);
@@ -339,6 +343,7 @@ export class Hero extends PIXI.Container
 
     removeBodyData()
     {
+        this.isActive = false;
         if(this.body.isDebug)
         {
             disposeData.debugGraphic.push(this.body.graphic);

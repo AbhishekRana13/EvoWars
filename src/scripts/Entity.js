@@ -379,7 +379,7 @@ export class Entity extends PIXI.Container
             fixedRotation : true
         });
 
-        // this.sBody.isDebug = true;
+       // this.sBody.isDebug = true;
         
         const rectShape = new P2.Box({
             width : this.sword.width * this.scale.x * config.scaleFactor,
@@ -606,7 +606,7 @@ export class Entity extends PIXI.Container
         const heroPos = new PIXI.Point(hero.body.position[0], hero.body.position[1]);
 
         const direction = getDirectionBetween(ownPos, heroPos);
-        if(getMagnitude(direction) <= ((this.body.shapes[0].radius * 3) +  hero.body.shapes[0].radius)
+        if(getMagnitude(direction) <= ((this.body.shapes[0].radius * 5) +  hero.body.shapes[0].radius)
             && !this.isTurning)
 
         {
@@ -634,7 +634,7 @@ export class Entity extends PIXI.Container
 
     get swingSwordRange()
     {
-        return ((this.body.shapes[0].radius) * 2 + this.followTarget.body.shapes[0].radius);
+        return (this.body.shapes[0].radius + this.sBody.shapes[0].height);
     }
 
 

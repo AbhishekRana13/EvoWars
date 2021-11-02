@@ -83,7 +83,7 @@ export class CollectState extends States
            dir = normalize(dir); 
           //  console.log("IS OUT", dir);
             clearTimeout(this.lastTimeout);
-            this.entity.changeDirection(dir, 150);
+            this.entity.changeDirection(dir, 200);
             this.setRandomTimeout();
         }
     }
@@ -214,7 +214,7 @@ export class EscapeState extends States
 
         if(dir == null)
         {
-            this.entity.changeDirection(this.getDirection, 350);
+            this.entity.changeDirection(this.getDirection, 200);
         } else
         {
             dir = normalize(dir); 
