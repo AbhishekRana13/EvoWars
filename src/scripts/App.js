@@ -93,9 +93,9 @@ export class App {
             setTimeout(() => {
                 loaderContainer.destroy();
 
-                // Globals.scene.start(new MainScene());
+                Globals.scene.start(new MainScene());
 
-                Globals.scene.start(new GameScene());
+                // Globals.scene.start(new GameScene());
             }, 1000);
         });
 
