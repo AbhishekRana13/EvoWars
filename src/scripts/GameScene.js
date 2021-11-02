@@ -20,6 +20,7 @@ export class GameScene
 {
     constructor()
     {
+        globalThis.consoleEntity = (index) => Globals.entities[index];
         this.sceneContainer = new PIXI.Container();
 
         this.container = new PIXI.Container();
@@ -50,7 +51,7 @@ export class GameScene
         this.sceneContainer.addChild(this.uiContainer);
        
 
-        this.createWorld(3);
+        this.createWorld(4);
 
         
         this.createHeroContainer();
@@ -61,7 +62,7 @@ export class GameScene
         debugBG.beginFill(0x808080, 0.4);
         debugBG.drawRect(0, 0, config.logicalWidth, config.logicalHeight);
         debugBG.endFill();
-        
+
         //this.container.addChild(debugBG);
 
         const debugBG2 = new PIXI.Graphics();
@@ -79,7 +80,7 @@ export class GameScene
             if(Object.keys(Globals.entities).length < 30)
                 this.createEntities(5);
             if(this.collectibleManager.collectibles.length < 50)
-                this.createCollectibles(5);
+                this.createCollectibles(10);
         },
         10000
         );
@@ -89,12 +90,14 @@ export class GameScene
 
         this.worldBounds = {};
         
-        this.worldBounds.left = config.logicalWidth/2 - this.backgroundContainer.width/2 + this.heroContainer.globalWidth;
-        this.worldBounds.right = config.logicalWidth/2 + this.backgroundContainer.width/2 - this.heroContainer.globalWidth;
+        const width = this.heroContainer?.globalWidth || Globals.entities[Object.keys(Globals.entities)[0]].globalWidth;
+        //console.log(width)
+        this.worldBounds.left = config.logicalWidth/2 - this.backgroundContainer.width/2 + width;
+        this.worldBounds.right = config.logicalWidth/2 + this.backgroundContainer.width/2 - width;
 
 
-        this.worldBounds.top = config.logicalHeight/2 - this.backgroundContainer.height/2 + this.heroContainer.globalHeight;
-        this.worldBounds.bottom = config.logicalHeight/2 + this.backgroundContainer.height/2 - this.heroContainer.globalHeight;
+        this.worldBounds.top = config.logicalHeight/2 - this.backgroundContainer.height/2 + width;
+        this.worldBounds.bottom = config.logicalHeight/2 + this.backgroundContainer.height/2 - width;
 
 
         this.createHeroXPBar();
@@ -123,6 +126,8 @@ export class GameScene
         // const message = new PromptMessage("You Died! Noob!");
         //     this.container.addChild(message);
         
+
+       
     }
 
     resize()
@@ -197,27 +202,47 @@ export class GameScene
     {
         Globals.world.on("beginContact", (evt) => {
     
+            if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.COLLECTIBLE, gameSettings.CollisionGroups.SIGHT))
+            {
+                const bodies = this.getBodyByType(evt, gameSettings.CollisionGroups.SIGHT);
 
-            if((evt.shapeA.group == gameSettings.CollisionGroups.HERO && evt.shapeB.group == gameSettings.CollisionGroups.COLLECTIBLE) ||
-                (evt.shapeB.group == gameSettings.CollisionGroups.HERO && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
+                bodies.bodyA.parentEntity.AddCollectible(bodies.bodyB);
+            }
+
+            if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.SWORD, gameSettings.CollisionGroups.ENTITY))
+            {
+                const bodies = this.getBodyByType(evt, gameSettings.CollisionGroups.SWORD);
+               // console.log(bodies.bodyA, bodies.bodyB);
+                if(bodies.bodyA.isActive)
+                {
+                    bodies.bodyA.parentEntity.enemyGotHit(bodies.bodyB);
+                }
+            } else if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.SWORD, gameSettings.CollisionGroups.HERO))
+            {
+                const bodies = this.getBodyByType(evt, gameSettings.CollisionGroups.SWORD);
+               // console.log(bodies.bodyA, bodies.bodyB);
+                if(bodies.bodyA.isActive)
+                {
+                    bodies.bodyA.parentEntity.enemyGotHit(bodies.bodyB);
+                }
+            }
+
+
+
+            if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.COLLECTIBLE, gameSettings.CollisionGroups.HERO))
             {
                 this.collectCollectible(evt.bodyA, evt.bodyB);
-            } else  if((evt.shapeA.group == gameSettings.CollisionGroups.ENTITY && evt.shapeB.group == gameSettings.CollisionGroups.COLLECTIBLE) ||
-            (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.COLLECTIBLE))
+
+            } else  if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.COLLECTIBLE, gameSettings.CollisionGroups.ENTITY))
             {
                 this.collectCollectible(evt.bodyA, evt.bodyB);
-               
-
-            } else if((evt.shapeA.group == gameSettings.CollisionGroups.ENTITY && evt.shapeB.group == gameSettings.CollisionGroups.SIGHT)||
-                        (evt.shapeB.group == gameSettings.CollisionGroups.ENTITY && evt.shapeA.group == gameSettings.CollisionGroups.SIGHT))
+            }
+            else if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.SIGHT, gameSettings.CollisionGroups.ENTITY))
             {
                 
                 const body1 = evt.bodyA;
                 const body2 = evt.bodyB; 
                 
-
-                console.log("OverLaped");
-
                 if(body1.parentEntity == body2.parentEntity) return;
 
                 const sightBody = (body1.shapes[0].group == gameSettings.CollisionGroups.SIGHT) ? body1 : body2;
@@ -231,7 +256,31 @@ export class GameScene
             
         }, this);
 
+        Globals.world.on("endContact", (evt) => {
+    
+            if(this.checkCollision(evt.shapeA, evt.shapeB, gameSettings.CollisionGroups.COLLECTIBLE, gameSettings.CollisionGroups.SIGHT))
+            {
+                const bodies = this.getBodyByType(evt, gameSettings.CollisionGroups.SIGHT);
+
+                bodies.bodyA.parentEntity.RemoveCollectible(bodies.bodyB);
+            }
+
+        }, this);
+
         
+    }
+
+    checkCollision(shapeA, shapeB, CompareA, CompareB)
+    {
+        return (shapeA.group == CompareA && shapeB.group == CompareB) || (shapeB.group == CompareA && shapeA.group == CompareB);
+    }
+
+    getBodyByType(evt, typeToGet)
+    {
+        return {
+            bodyA : (evt.shapeA.group == typeToGet) ? evt.bodyA : evt.bodyB,
+            bodyB : (evt.shapeA.group == typeToGet) ? evt.bodyB : evt.bodyA
+        }
     }
 
     collectCollectible(body1, body2)

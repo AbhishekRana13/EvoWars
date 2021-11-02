@@ -55,7 +55,7 @@ export class Entity extends PIXI.Container
         this.nameText.anchor.set(0.5, 0);
        
         this.uuid = PIXI.utils.uid();
-       // this.nameText.text += (" " +this.uuid)
+       this.nameText.text += (" " +this.uuid)
         Globals.entities[this.uuid] = this;
 
         this.initializeStates();    
@@ -63,10 +63,15 @@ export class Entity extends PIXI.Container
 
     changeDirection(direction, time = 2000)
     {
+        
         this.isTurning = true;
         this.direction = direction;
 
-        new TWEEN.Tween(this.currentDirection).to({x : this.direction.x, y : this.direction.y}, time).onComplete(() => {
+        if(this.directionTween?.isPlaying())
+            this.directionTween.stop();
+            
+
+        this.directionTween = new TWEEN.Tween(this.currentDirection).to({x : this.direction.x, y : this.direction.y}, time).onComplete(() => {
             this.isTurning = false;
         }).start();
     }
@@ -87,7 +92,7 @@ export class Entity extends PIXI.Container
         });
 
         this.states.COLLECT.addTransition(this.states.ESCAPE, () => {
-            return (this.followTarget != null && this.followTarget.level > this.level && this.checkRandomValue(0.5));
+            return (this.followTarget != null && this.followTarget.level >= this.level && this.checkRandomValue(0.5));
         });
 
         this.states.ATTACK.addTransition(this.states.COLLECT, () => {
@@ -95,7 +100,7 @@ export class Entity extends PIXI.Container
         });
 
         this.states.ATTACK.addTransition(this.states.ESCAPE, () => {
-            return (this.followTarget != null && this.followTarget.level > this.level  && this.checkRandomValue(0.4));
+            return (this.noOfAttempts > 3);
         });
 
         this.states.ESCAPE.addTransition(this.states.COLLECT, () => {
@@ -112,7 +117,7 @@ export class Entity extends PIXI.Container
     {
         const randomValue = Math.random();
 
-        return randomValue > valueToCompare;
+        return randomValue >= valueToCompare;
     }
 
     switchState(state)
@@ -267,61 +272,78 @@ export class Entity extends PIXI.Container
         });
 
         this.lastAngle = this.body.angle;
-        
-        //console.log(parentContainer.width, parentContainer.height)
-       // console.log(this.offsetX, this.offsetY);
-        const circleShape = new P2.Circle({
-            radius : this.globalWidth/2,
-           // sensor : true
-        });
 
+        const circleShape = new P2.Circle({
+            radius : this.globalWidth/2
+        });
       
-         circleShape.group = gameSettings.CollisionGroups.ENTITY;
+        circleShape.group = gameSettings.CollisionGroups.ENTITY;
+        
+        console.log(circleShape.id, "Body");
+
+        this.body.collisionResponse = false;
         
         this.body.parentEntity = this;
+
         this.body.addShape(circleShape);
-       
-        // this.body.isDebug = true;
         world.addBody(this.body);
-
-       // this.addBodyVisualisation(circleShape);
-
-       // console.log(circleShape);
 
         this.createSightRadius();
     }
 
     createSightRadius()
     {
+
+        this.collectiblesInSight = [];
+
+        // console.log(Globals.world);
+
         this.sightBody = new P2.Body({
             type : P2.Body.KINEMATIC
         });
 
         //this.sightBody.isDebug = true;
-        this.sightBody.debugColor = 0x00ff00;
+        //this.sightBody.debugColor = 0x00ff00;
+        
         const circleShape = new P2.Circle({
-            radius : this.body.shapes[0].radius * 4,
+            radius : this.body.shapes[0].radius * 5,
             sensor : true
         });
+        
         circleShape.group = gameSettings.CollisionGroups.SIGHT;
+        
         this.sightBody.addShape(circleShape);
         this.sightBody.parentEntity = this;
+        
+        console.log(circleShape.id, "Sight");
+        
         Globals.world.addBody(this.sightBody);
+
+        Globals.world.disableBodyCollision(this.body, this.sightBody);
     }
 
-    addBodyVisualisation(circleShape)
+    AddCollectible(body)
     {
-        
-        this.bodyVisual = new PIXI.Graphics();
-        this.bodyVisual.beginFill(0xff0000, 0.3);
-        
-        this.bodyVisual.drawCircle(0, 0, circleShape.radius);
-        this.bodyVisual.endFill();
+        if(this.collectiblesInSight.indexOf(body) == -1)
+        {
+            this.collectiblesInSight.push(body);
+        }
 
-        //this.addChild(this.bodyVisual);
+        // console.log(this.collectiblesInSight);
     }
 
-    createSword(world)
+    RemoveCollectible(body)
+    {
+        const index = this.collectiblesInSight.indexOf(body);
+        if(index != -1)
+            this.collectiblesInSight.splice(index, 1);
+
+            // console.log(this.collectiblesInSight);
+    }
+
+   
+
+    createSword()
     {
         const textures = [];
 
@@ -357,16 +379,23 @@ export class Entity extends PIXI.Container
             sensor : true
         })
 
-        
+       this.sBody.collisionResponse = false;
+      
+        console.log(rectShape.id, "Sword");
 
-        rectShape.group = gameSettings.CollisionGroups.SWORD;
+        this.sBody.isActive = false;
+        this.sBody.parentEntity = this;
+        //this.sBody.sleep();
+
+       rectShape.group = gameSettings.CollisionGroups.SWORD;
 
         this.sBody.addShape(rectShape);
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
        // console.log(this.sBody.shapes[0].position);
-        world.addBody(this.sBody);
+        Globals.world.addBody(this.sBody);
         
-
+        Globals.world.disableBodyCollision(this.sBody, this.sightBody);
+        Globals.world.disableBodyCollision(this.body, this.sBody);
        // this.sBodyVisualization(circleShape);
 
        
@@ -453,6 +482,10 @@ export class Entity extends PIXI.Container
             
         }
 
+        if(this.isSwinging)
+            speed = 0;
+
+
         if(isNaN(this.body.angle))
         {
             this.body.angle = this.lastAngle;
@@ -482,6 +515,67 @@ export class Entity extends PIXI.Container
         this.y = ((this.body.position[1] - config.topY) / config.scaleFactor) //- this.backgroundContainer.y;
 
         this.rotation = this.body.angle;
+    }
+
+
+    get isFacingTowardsBounds()
+    {
+        const testDir ={
+            x : this.currentDirection.x * 2,
+            y : this.currentDirection.y * 2
+        }
+
+        const width = this.visual.width * this.scale.x;
+        const height = this.visual.height * this.scale.y;
+
+        const ePos = fetchGlobalPosition(this);
+        ePos.x += testDir.x;
+        ePos.y += testDir.y;
+
+        const dir = this.currentDirection.clone();
+
+        let isOut = false;
+
+        let rightX = this.backgroundContainer.width/2 - width;
+        rightX += this.backgroundContainer.x;
+        rightX *= config.scaleFactor;
+        rightX += config.leftX;
+
+        let leftX = -this.backgroundContainer.width/2 + width;
+        leftX += this.backgroundContainer.x;
+        leftX *= config.scaleFactor;
+        leftX += config.leftX;
+
+        let topY = -this.backgroundContainer.height/2 + height;
+        topY += this.backgroundContainer.y;
+        topY *= config.scaleFactor;
+        topY += config.topY;
+
+        let bottomY = this.backgroundContainer.height/2 - height;
+        bottomY += this.backgroundContainer.y;
+        bottomY *= config.scaleFactor;
+        bottomY += config.topY;
+
+
+        if(ePos.x >= rightX || ePos.x <= leftX)
+        {
+            dir.x  *= -1;
+            // console.log("isOutX" , dir.x);
+            
+            isOut = true;
+        }
+
+        if(ePos.y >= bottomY || ePos.y <= topY)
+        {
+            dir.y  *= -1;
+
+            // console.log("isOutY", dir.y);
+           // dir.y = 1 - dir.y;
+            isOut = true;
+        }
+
+
+        return (isOut) ? dir : null;
     }
 
     updateBodyVisual(dt)
@@ -517,8 +611,9 @@ export class Entity extends PIXI.Container
 
     checkNearbyTarget(entityBody)
     {
-        if(this.followTarget != null || entityBody == null) return;
+        if(this.followTarget != null || entityBody == null || Math.random() < 0.4) return;
 
+        
         
         this.followTarget = entityBody.parentEntity;
            
@@ -542,18 +637,19 @@ export class Entity extends PIXI.Container
         if(!this.readyToSwing) return;
 
         if(this.isSwinging) return;
+
         this.isSwinging = true;
 
-        this.checkHit = true; 
-
+       // this.checkHit = true; 
+       this.sBody.isActive = true;
         this.noOfAttempts++;
-        const randomTimer = (Math.random() * 200) + 100;
+        const randomTimer = 250
 
         new TWEEN.Tween(this.sword)
             .to({angle : 90, x : 0, y : -this.visual.width * 0.8, scale : {x : 0.7, y : 0.9} }, randomTimer)
             .easing(Easing.Back.In)
             .onComplete((object) => {
-                this.checkHit = false;
+                this.sBody.isActive = false;
                 new TWEEN.Tween(object)
                     .to({angle : -20, x : -this.visual.width * 0.8, y : 0, scale : {x : 0.8, y : 0.8}}, randomTimer)
                     .delay(randomTimer)
@@ -565,57 +661,19 @@ export class Entity extends PIXI.Container
             .start();
     }
 
-    CheckEnemyHit()
+    enemyGotHit(body)
     {
-        if(this.checkHit && this.followTarget != null)
-        {  
-                if(this.sBody.overlaps(this.followTarget.body))
-                {
-                   
-                   this.followTarget.removeBodyData();
+        const entity = body.parentEntity;
+        entity.removeBodyData();
+        this.updateXP(entity.reward);
+        
 
-                   this.updateXP(this.followTarget.reward);
-           
-                   this.followTarget.destroyObj();
+        if(entity == this.followTarget)
+            this.followTarget = null;
 
-                    this.followTarget = null;
-                    
-                }
-
-                
-                let keys = Object.keys(Globals.entities);
-                keys = keys.filter(key => (key != this.uuid));
-            
-                for (let i = keys.length-1; i >= 0; i--) {    
-                    const entity = Globals.entities[keys[i]];
-                    
-                    if(this.sBody.overlaps(entity.body))
-                    {
-                    
-                        entity.removeBodyData();
-                        
-                        this.updateXP(this.followTarget?.reward);
-                        entity.destroyObj();  
-
-                        this.followTarget = null;
-                        
-                    }
-                }
-
-                // if(this.sBody.overlaps(Globals.heroBody))
-                // {
-                //     Globals.heroBody.parentContainer.removeBodyData();
-                //     this.updateXP(Globals.heroBody.parentContainer.reward);
-                    
-                //     Globals.heroBody.parentContainer.destroyObj();  
-
-                //     this.followTarget = null;
-                // }
-
-                
-                
-        }
+        entity.destroyObj();
     }
+
 
     get reward()
     {

@@ -23,16 +23,17 @@ export class Collectible extends PIXI.Container
         
 
         this.body = new P2.Body({
-            // mass :1 ,
-            // position : [0, 0],
-            // fixedRotation : true
-            type : P2.Body.STATIC 
+             mass :1 ,
+             position : [0, 0],
+             fixedRotation : true
+            //type : P2.Body.STATIC 
         });
 
         const circleShape = new P2.Circle({
             radius : this.radius * config.scaleFactor,
             sensor : true
-        })
+        });
+
         circleShape.group = gameSettings.CollisionGroups.COLLECTIBLE;
         
         this.body.addShape(circleShape);

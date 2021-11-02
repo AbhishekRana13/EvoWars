@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { getDirectionBetween, getMagnitude, normalize } from '../Utilities';
+import { fetchGlobalPosition, getDirectionBetween, getMagnitude, normalize } from '../Utilities';
 
 
 export const Transition = (to, condition) => {
@@ -46,6 +46,20 @@ export class CollectState extends States
         this.entity.changeDirection(this.getDirection);
 
         this.setRandomTimeout();
+
+        const randomTime = (Math.random() * 2000) + 3000;
+
+        this.boostTime = setTimeout(() => {
+            if(Math.random() > 0.8)
+            {
+                this.entity.isInBoostedMode = true;
+
+                this.boostTime = setTimeout(() => {
+                    this.entity.isInBoostedMode = false;
+
+                }, randomTime);
+            }
+        }, randomTime);
     }
 
     setRandomTimeout()
@@ -53,7 +67,7 @@ export class CollectState extends States
         const randomValue = ((Math.random() * 2) + 1) * 1000;
 
         this.lastTimeout = setTimeout(() => {
-            this.entity.changeDirection(this.getDirection);
+            this.entity.changeDirection(this.getDirection, 1000);
 
             this.setRandomTimeout();
         }, randomValue);
@@ -61,20 +75,45 @@ export class CollectState extends States
 
     onUpdate(dt)
     {
-        console.log("IN COLLECT");
+        // console.log("IN COLLECT");
+        let dir = this.entity.isFacingTowardsBounds;
+
+        if(dir != null && !this.entity.isTurning)
+        { 
+           dir = normalize(dir); 
+          //  console.log("IS OUT", dir);
+            clearTimeout(this.lastTimeout);
+            this.entity.changeDirection(dir, 150);
+            this.setRandomTimeout();
+        }
     }
 
     onExit()
     {
         clearTimeout(this.lastTimeout);
+        clearTimeout(this.boostTime);
+        this.entity.isInBoostedMode = false;
         this.entity.changeDirection(new PIXI.Point(0, 0), 100);
         
     }
 
     get getDirection()
     {
+        if(this.entity.collectiblesInSight.length > 0)
+        {
+            const cPos = new PIXI.Point(this.entity.collectiblesInSight[0].position[0], this.entity.collectiblesInSight[0].position[1]);
+            const ePos = fetchGlobalPosition(this.entity);
+
+            const dir = getDirectionBetween(ePos, cPos);
+
+            return normalize(dir);
+            
+        }
+
         return new PIXI.Point((Math.random() * 2) - 1, (Math.random() * 2) - 1);
     }
+
+
 
 }
 
@@ -88,7 +127,8 @@ export class AttackState extends States
     
     onEnter()
     {
-        console.log("STATE Changed " + this.entity.uuid);
+        // console.log("STATE Changed " + this.entity.uuid);
+        this.entity.noOfAttempts = 0;
 
         const randomTime = (Math.random() * 2000) + 3000;
 
@@ -108,17 +148,10 @@ export class AttackState extends States
 
     onUpdate(dt)
     {
-
-       
-        
-
         if(!this.entity.isTurning)
             this.entity.changeDirection(this.getDirection, 150);
             
         this.entity.swingSword();
-
-        this.entity.CheckEnemyHit();
-
     }
 
     
@@ -138,7 +171,7 @@ export class AttackState extends States
         } else if (getMagnitude(direction) <= this.entity.swingSwordRange)
         {
             this.entity.readyToSwing = true;
-           // return new PIXI.Point();
+            return new PIXI.Point();
         } 
         
 
@@ -152,33 +185,41 @@ export class EscapeState extends States
     {
         super(entity);
     }
-
-    
       
     onEnter()
     {
-        console.log("STATE Changed " + this.entity.uuid);
+        // console.log("STATE Changed " + this.entity.uuid);
+        this.entity.noOfAttempts = 0;
+        
 
-        const randomTime = (Math.random() * 2000) + 3000;
+        if(Math.random() > 0.2)
+        {
+            this.entity.isInBoostedMode = true;
+        }
 
-        this.lastTimeout = setTimeout(() => {
-            if(Math.random() > 0.8)
-            {
-                this.entity.isInBoostedMode = true;
-            }
-        }, randomTime);
+    
     }
 
     onExit()
     {
-        clearTimeout(this.lastTimeout);
         this.entity.isInBoostedMode = false;
     }
     onUpdate(dt)
     {
 
-        if(!this.entity.isTurning)
-            this.entity.changeDirection(this.getDirection, 150);
+        let dir = this.entity.isFacingTowardsBounds;
+        
+        if(this.entity.isTurning)
+            return;
+
+        if(dir == null)
+        {
+            this.entity.changeDirection(this.getDirection, 350);
+        } else
+        {
+            dir = normalize(dir); 
+            this.entity.changeDirection(dir, 350);
+        }
     }
 
     get getDirection()

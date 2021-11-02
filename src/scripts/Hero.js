@@ -105,14 +105,16 @@ export class Hero extends PIXI.Container
             fixedRotation : true
         });
 
-        this.body.parentContainer = this;
+        this.body.parentEntity = this;
 
         const circleShape = new P2.Circle({
             radius : (this.globalWidth/2),
-           sensor : true
+    //       sensor : true
         });
 
-        circleShape.group = gameSettings.CollisionGroups.HERO;
+        console.log(circleShape.id, "bodyHuman");
+
+       circleShape.group = gameSettings.CollisionGroups.HERO;
 
         this.body.addShape(circleShape);
         
@@ -120,25 +122,16 @@ export class Hero extends PIXI.Container
 
         //this.addBodyVisualisation(this.circleShape);
 
-        console.log(circleShape);
+        //console.log(circleShape);
 
         Globals.heroBody = this.body;
     }
 
-    addBodyVisualisation(circleShape)
-    {
-        this.bodyVisual = new PIXI.Graphics();
-        this.bodyVisual.beginFill(0x00ff00, 0.3);
-        
-        this.bodyVisual.drawCircle(0, 0, circleShape.radius);
-        this.bodyVisual.endFill();
-
-       
-    }
+    
 
     
 
-    createSword(world)
+    createSword()
     {
 
         const textures = [];
@@ -160,15 +153,13 @@ export class Hero extends PIXI.Container
 
     
 
-    
-       
        this.sBody = new P2.Body({
             mass : 1,//type : P2.Body.KINEMATIC,
             position : [0, 0],
             fixedRotation : true
         });
 
-       // this.sBody.isDebug = true;
+    //    this.sBody.isDebug = true;       
         
         const rectShape = new P2.Box({
             width : this.sword.width * this.scale.x * config.scaleFactor,
@@ -179,14 +170,15 @@ export class Hero extends PIXI.Container
         
 
         rectShape.group = gameSettings.CollisionGroups.SWORD;
-
+        console.log(rectShape.id, "HumanSword");
         this.sBody.addShape(rectShape);
         this.sBody.shapes[0].position[1] = (-this.sword.height/2) * this.scale.y * config.scaleFactor
       //  console.log(this.sBody.shapes[0].position);
-        world.addBody(this.sBody);
+        Globals.world.addBody(this.sBody);
         
 
-       // this.sBodyVisualization(circleShape);
+        Globals.world.disableBodyCollision(this.sBody, this.body);
+       
 
        
     }
